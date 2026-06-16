@@ -7,12 +7,14 @@ describe('CategoriesService', () => {
   let service: CategoriesService;
 
   const mockPrismaService = {
+    $transaction: jest.fn(),
     category: {
       create: jest.fn(),
       findMany: jest.fn(),
       findUnique: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
+      count: jest.fn(),
     },
   };
 
