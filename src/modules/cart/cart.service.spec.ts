@@ -12,6 +12,9 @@ describe('CartService', () => {
       findUnique: jest.fn(),
       update: jest.fn(),
       create: jest.fn(),
+      findFirst: jest.fn(),
+      delete: jest.fn(),
+      deleteMany: jest.fn(),
     },
     product: {
       findUnique: jest.fn(),
@@ -161,5 +164,104 @@ describe('CartService', () => {
         quantity: 2,
       }),
     ).rejects.toThrow(BadRequestException);
+  });
+  it('should update cart item quantity', async () => {
+    const cartItem = {
+      ...mockCartItem,
+      product: mockProduct,
+    };
+
+    const updatedCartItem = {
+      ...mockCartItem,
+      quantity: 3,
+    };
+
+    mockPrismaService.cartItem.findFirst.mockResolvedValue(cartItem);
+    mockPrismaService.cartItem.update.mockResolvedValue(updatedCartItem);
+
+    const result = await service.updateItem('user-id', 'cart-item-id', {
+      quantity: 3,
+    });
+
+    expect(result).toEqual(updatedCartItem);
+    expect(mockPrismaService.cartItem.findFirst).toHaveBeenCalledWith({
+      where: {
+        id: 'cart-item-id',
+        userId: 'user-id',
+      },
+      include: {
+        product: true,
+      },
+    });
+    expect(mockPrismaService.cartItem.update).toHaveBeenCalled();
+  });
+
+  it('should throw NotFoundException when updating missing cart item', async () => {
+    mockPrismaService.cartItem.findFirst.mockResolvedValue(null);
+
+    await expect(
+      service.updateItem('user-id', 'missing-id', {
+        quantity: 1,
+      }),
+    ).rejects.toThrow(NotFoundException);
+  });
+
+  it('should throw BadRequestException when updated quantity exceeds stock', async () => {
+    mockPrismaService.cartItem.findFirst.mockResolvedValue({
+      ...mockCartItem,
+      product: {
+        ...mockProduct,
+        stock: 2,
+      },
+    });
+
+    await expect(
+      service.updateItem('user-id', 'cart-item-id', {
+        quantity: 3,
+      }),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('should remove cart item', async () => {
+    mockPrismaService.cartItem.findFirst.mockResolvedValue(mockCartItem);
+    mockPrismaService.cartItem.delete.mockResolvedValue(mockCartItem);
+
+    const result = await service.removeItem('user-id', 'cart-item-id');
+
+    expect(result).toEqual({
+      message: 'Cart item removed successfully',
+    });
+
+    expect(mockPrismaService.cartItem.delete).toHaveBeenCalledWith({
+      where: {
+        id: 'cart-item-id',
+      },
+    });
+  });
+
+  it('should throw NotFoundException when removing missing cart item', async () => {
+    mockPrismaService.cartItem.findFirst.mockResolvedValue(null);
+
+    await expect(service.removeItem('user-id', 'missing-id')).rejects.toThrow(
+      NotFoundException,
+    );
+  });
+
+  it('should clear cart', async () => {
+    mockPrismaService.cartItem.deleteMany.mockResolvedValue({
+      count: 2,
+    });
+
+    const result = await service.clearCart('user-id');
+
+    expect(result).toEqual({
+      message: 'Cart cleared successfully',
+    });
+
+    expect(mockPrismaService.cartItem.deleteMany).toHaveBeenCalledWith({
+      where: {
+        userId: 'user-id',
+      },
+    });
   });
 });

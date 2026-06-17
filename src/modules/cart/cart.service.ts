@@ -106,27 +106,74 @@ export class CartService {
     });
   }
 
-  updateItem(userId: string, cartItemId: string, dto: UpdateCartItemDto) {
+  async updateItem(userId: string, cartItemId: string, dto: UpdateCartItemDto) {
+    const cartItem = await this.prisma.cartItem.findFirst({
+      where: {
+        id: cartItemId,
+        userId,
+      },
+      include: {
+        product: true,
+      },
+    });
+
+    if (!cartItem) {
+      throw new NotFoundException('Cart item not found');
+    }
+
+    if (cartItem.product.stock < dto.quantity) {
+      throw new BadRequestException('Not enough stock');
+    }
+
+    return this.prisma.cartItem.update({
+      where: {
+        id: cartItemId,
+      },
+      data: {
+        quantity: dto.quantity,
+      },
+      include: {
+        product: {
+          include: {
+            category: true,
+          },
+        },
+      },
+    });
+  }
+
+  async removeItem(userId: string, cartItemId: string) {
+    const cartItem = await this.prisma.cartItem.findFirst({
+      where: {
+        id: cartItemId,
+        userId,
+      },
+    });
+
+    if (!cartItem) {
+      throw new NotFoundException('Cart item not found');
+    }
+
+    await this.prisma.cartItem.delete({
+      where: {
+        id: cartItemId,
+      },
+    });
+
     return {
-      message: 'Update cart item endpoint',
-      userId,
-      cartItemId,
-      dto,
+      message: 'Cart item removed successfully',
     };
   }
 
-  removeItem(userId: string, cartItemId: string) {
-    return {
-      message: 'Remove cart item endpoint',
-      userId,
-      cartItemId,
-    };
-  }
+  async clearCart(userId: string) {
+    await this.prisma.cartItem.deleteMany({
+      where: {
+        userId,
+      },
+    });
 
-  clearCart(userId: string) {
     return {
-      message: 'Clear cart endpoint',
-      userId,
+      message: 'Cart cleared successfully',
     };
   }
 }
