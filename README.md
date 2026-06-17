@@ -1,93 +1,122 @@
 # E-commerce API
 
-## Overview
+## 1. Project Overview
 
-Production-style REST API for an e-commerce backend built with NestJS,
-TypeScript, Prisma, and PostgreSQL.
+E-commerce API is a production-style backend project built with NestJS,
+TypeScript, Prisma, and PostgreSQL. It models the core workflows of an online
+store, including authentication, role-based administration, product catalog
+management, cart operations, checkout, order tracking, cancellation, and stock
+restoration.
 
-The project demonstrates practical backend engineering concerns:
-authentication, role-based access control, catalog management, cart workflows,
-checkout, order administration, stock handling, validation, error handling, and
-automated tests.
+The project is designed as a portfolio-ready backend codebase that demonstrates
+REST API design, modular architecture, transactional business logic, validation,
+error handling, automated tests, and developer-friendly documentation.
 
-## Features
+## 2. Features
 
-- User registration, login, profile update, and password change
-- JWT authentication with protected routes
-- Role-based access control for admin-only operations
-- Admin user management
-- Category and product CRUD
-- Product listing with pagination and filters
-- User cart management
-- Checkout from cart with stock validation
-- Order history and order detail endpoints
-- Admin order management and status updates
-- User order cancellation for pending orders
-- Atomic stock decrement on checkout and stock restoration on cancellation
-- Standard API response wrapping and centralized exception formatting
-- Unit tests and e2e checkout flow test
-- Swagger UI and Postman collection for API exploration
+- User registration and login
+- JWT-based authentication
+- Password hashing with bcrypt
+- Profile update and password change endpoints
+- Role-based access control for `USER` and `ADMIN`
+- Admin user listing, lookup, role update, and deletion
+- Category CRUD
+- Product CRUD
+- Public product and category listing
+- Product search, filtering, and pagination
+- Current-user cart management
+- Cart item create, update, remove, and clear operations
+- Checkout from cart
+- Order item price snapshots
+- Atomic stock decrement during checkout
+- User order history and order detail
+- Admin order listing, detail, and status updates
+- User cancellation for pending orders
+- Atomic stock restoration when an order is cancelled
+- Standard success response interceptor
+- Centralized HTTP exception formatting
+- Unit tests and e2e tests
+- Swagger documentation
+- Postman collection
+- ERD documentation
 
-## Tech Stack
+## 3. Tech Stack
 
-- Runtime: Node.js
-- Framework: NestJS
-- Language: TypeScript
-- Database: PostgreSQL
-- ORM: Prisma
-- Authentication: Passport JWT, `@nestjs/jwt`
-- Validation: class-validator, class-transformer
-- Password hashing: bcrypt
-- Testing: Jest, Supertest
-- Local database: Docker Compose with PostgreSQL
-- API documentation: Swagger/OpenAPI
+- Node.js
+- NestJS
+- TypeScript
+- PostgreSQL
+- Prisma ORM
+- Passport JWT
+- `@nestjs/jwt`
+- bcrypt
+- class-validator
+- class-transformer
+- Jest
+- Supertest
+- Docker Compose
+- Swagger/OpenAPI
 
-## Architecture
+## 4. Architecture
 
-The application follows a modular NestJS architecture:
+The application follows a modular NestJS structure. Each domain module owns its
+controller, service, DTOs, and tests.
 
-- Controllers define HTTP routes and apply guards.
-- Services contain business logic and Prisma data access.
-- DTOs validate and document request payloads/query parameters.
+- Controllers define HTTP routes and delegate work to services.
+- Services contain business logic and Prisma database operations.
+- DTOs validate request bodies and query parameters.
 - Guards enforce JWT authentication and role-based authorization.
-- Common filters/interceptors provide consistent error and success responses.
-- Prisma owns the database schema and migrations.
+- Decorators keep role requirements declarative.
+- Filters normalize error responses.
+- Interceptors wrap successful responses consistently.
+- Prisma defines the data model and database relations.
 
-Key modules:
+Main modules:
 
-- `AuthModule`: registration, login, JWT profile, profile update, password changes
-- `UsersModule`: admin user listing, lookup, role update, deletion
-- `CategoriesModule`: category CRUD
-- `ProductsModule`: product CRUD and public listing
-- `CartModule`: current user's cart and cart item operations
-- `OrdersModule`: checkout, user order history, cancellation, admin order management
+- `AuthModule`: registration, login, profile, and password management
+- `UsersModule`: admin user management
+- `CategoriesModule`: category CRUD and listing
+- `ProductsModule`: product CRUD, listing, search, and filters
+- `CartModule`: current-user cart operations
+- `OrdersModule`: checkout, order history, admin order management, cancellation
 
-## Database Schema Overview
+## 5. Database Schema Overview
 
-The Prisma schema models the core e-commerce domain:
+The Prisma schema contains the core e-commerce entities:
 
-- `User`: account, password hash, role, cart items, orders
-- `Category`: product grouping with unique slug
-- `Product`: catalog item with price, stock, active flag, and category
-- `CartItem`: user/product pair with quantity
-- `Order`: user order with status and total amount
-- `OrderItem`: order line item with quantity and snapshot price
+- `User`: stores account data, password hash, role, cart items, and orders
+- `Category`: groups products and uses a unique slug
+- `Product`: stores catalog data, price, stock, active status, and category
+- `CartItem`: connects a user to a product with a selected quantity
+- `Order`: stores order ownership, status, and total amount
+- `OrderItem`: stores order line items with quantity and snapshot price
 
 Enums:
 
 - `Role`: `USER`, `ADMIN`
 - `OrderStatus`: `PENDING`, `PAID`, `SHIPPED`, `COMPLETED`, `CANCELLED`
 
-## ERD
+Important relationships:
 
-Generated ERD assets are stored in `docs/`:
+- A user can have many cart items.
+- A user can place many orders.
+- A category can contain many products.
+- A product can appear in many cart items.
+- An order can contain many order items.
+- A product can appear in many order items.
+
+## 6. ERD
+
+The ERD is stored in the `docs/` folder:
 
 - [Mermaid ERD source](docs/ecommerce-erd.mmd)
 - [SVG ERD diagram](docs/ecommerce-erd.svg)
 
 ![E-commerce API ERD](docs/ecommerce-erd.svg)
 
-## Installation
+## 7. Getting Started
+
+Install dependencies:
 
 ```bash
 npm install
@@ -99,9 +128,21 @@ Generate Prisma Client:
 npx prisma generate
 ```
 
-## Environment Variables
+Start the local PostgreSQL database with Docker Compose:
 
-Create a `.env` file from the example:
+```bash
+docker compose up -d
+```
+
+Run database migrations:
+
+```bash
+npx prisma migrate dev
+```
+
+## 8. Environment Variables
+
+Create a local environment file:
 
 ```bash
 cp .env.example .env
@@ -116,19 +157,7 @@ JWT_SECRET=your_jwt_secret_here
 JWT_EXPIRES_IN=1d
 ```
 
-## Running Locally
-
-Start PostgreSQL:
-
-```bash
-docker compose up -d
-```
-
-Run migrations:
-
-```bash
-npx prisma migrate dev
-```
+## 9. Running Locally
 
 Start the API in development mode:
 
@@ -142,34 +171,21 @@ The API runs at:
 http://localhost:3000
 ```
 
-## Docker Setup
-
-This repository includes a `docker-compose.yml` for local PostgreSQL:
+Useful local database commands:
 
 ```bash
 docker compose up -d
-```
-
-It starts:
-
-- PostgreSQL 16 Alpine
-- Database: `ecommerce_db`
-- User/password: `postgres` / `postgres`
-- Host port: `5432`
-
-To stop the database:
-
-```bash
 docker compose down
-```
-
-To remove the database volume:
-
-```bash
 docker compose down -v
 ```
 
-## Running Tests
+The Docker Compose setup starts PostgreSQL 16 on port `5432` with:
+
+- Database: `ecommerce_db`
+- Username: `postgres`
+- Password: `postgres`
+
+## 10. Running Tests
 
 Run unit tests:
 
@@ -183,13 +199,13 @@ Run e2e tests:
 npm run test:e2e
 ```
 
-Run build:
+Run the TypeScript build:
 
 ```bash
 npm run build
 ```
 
-## API Documentation
+## 11. API Documentation
 
 Swagger UI is available after starting the application:
 
@@ -197,7 +213,7 @@ Swagger UI is available after starting the application:
 http://localhost:3000/api/docs
 ```
 
-The Swagger document includes tags for:
+Swagger is organized with these API tags:
 
 - Auth
 - Users
@@ -206,16 +222,16 @@ The Swagger document includes tags for:
 - Cart
 - Orders
 
-Bearer authentication is configured in Swagger. Log in through
-`POST /auth/login`, copy the `accessToken`, then authorize with:
+Bearer authentication is enabled in Swagger. Log in through `POST /auth/login`,
+copy the returned `accessToken`, then authorize with:
 
 ```text
 Bearer <accessToken>
 ```
 
-## Postman Collection
+## 12. Postman Collection
 
-A Postman collection is included at:
+The Postman collection is available at:
 
 ```text
 docs/ecommerce-api.postman_collection.json
@@ -223,13 +239,16 @@ docs/ecommerce-api.postman_collection.json
 
 Collection variables:
 
-- `baseUrl`: default `http://localhost:3000`
-- `token`: regular user JWT
-- `adminToken`: admin JWT
-- `userId`, `categoryId`, `productId`, `cartItemId`, `orderId`: resource IDs
-  used across requests
+- `baseUrl`: API base URL, default `http://localhost:3000`
+- `token`: JWT for a regular user
+- `adminToken`: JWT for an admin user
+- `userId`: user resource ID
+- `categoryId`: category resource ID
+- `productId`: product resource ID
+- `cartItemId`: cart item resource ID
+- `orderId`: order resource ID
 
-The collection is organized into:
+Collection folders:
 
 - Auth
 - Users
@@ -239,7 +258,7 @@ The collection is organized into:
 - Orders
 - Admin Orders
 
-## Folder Structure
+## 13. Folder Structure
 
 ```text
 ecommerce-api/
@@ -272,12 +291,14 @@ ecommerce-api/
 `-- README.md
 ```
 
-## Core API Flow
+## 14. Core API Flow
 
-1. Register or log in as a user.
-2. Browse categories/products.
-3. Add active products to cart.
-4. Checkout cart to create a pending order.
-5. View order history and order details.
-6. Cancel a pending order to restore stock.
-7. Use an admin account to manage users, catalog data, and order status.
+1. Register a user with `POST /auth/register`.
+2. Log in with `POST /auth/login` and store the JWT.
+3. Browse categories and products.
+4. Add an active product to the current user's cart.
+5. Checkout the cart to create a pending order.
+6. View current-user order history.
+7. Open a specific order detail.
+8. Cancel a pending order when needed.
+9. Use an admin account to manage users, catalog records, and order status.
