@@ -64,6 +64,12 @@ export class OrdersController {
   ) {
     return this.ordersService.updateOrderStatus(id, dto);
   }
+
+  @Patch(':id/cancel')
+  cancelMyOrder(@Req() request: AuthenticatedRequest, @Param('id') id: string) {
+    return this.ordersService.cancelMyOrder(request.user.id, id);
+  }
+
   @Get(':id')
   findMyOrder(@Req() request: AuthenticatedRequest, @Param('id') id: string) {
     return this.ordersService.findMyOrder(request.user.id, id);

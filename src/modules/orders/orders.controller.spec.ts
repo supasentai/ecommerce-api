@@ -58,11 +58,15 @@ describe('OrdersController', () => {
       message: 'Find my orders endpoint',
       userId: 'user-id',
     };
+    const query = {};
 
     mockOrdersService.findMyOrders.mockReturnValue(result);
 
-    expect(controller.findMyOrders(mockRequest)).toEqual(result);
-    expect(mockOrdersService.findMyOrders).toHaveBeenCalledWith('user-id');
+    expect(controller.findMyOrders(mockRequest, query)).toEqual(result);
+    expect(mockOrdersService.findMyOrders).toHaveBeenCalledWith(
+      'user-id',
+      query,
+    );
   });
 
   it('should call ordersService.findMyOrder', () => {
