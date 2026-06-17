@@ -9,6 +9,7 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Request } from 'express';
 
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -29,6 +30,8 @@ interface AuthenticatedRequest extends Request {
 
 @Controller('orders')
 @UseGuards(JwtAuthGuard, RolesGuard)
+@ApiTags('Orders')
+@ApiBearerAuth()
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 

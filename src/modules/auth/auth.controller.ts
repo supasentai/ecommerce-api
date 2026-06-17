@@ -7,6 +7,7 @@ import {
   UseGuards,
   Patch,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Request } from 'express';
 
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -28,6 +29,7 @@ interface AuthenticatedRequest extends Request {
 }
 
 @Controller('auth')
+@ApiTags('Auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
@@ -42,20 +44,25 @@ export class AuthController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @Get('profile')
   profile(@Req() request: AuthenticatedRequest) {
     return request.user;
   }
+
   @Patch('profile')
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   updateProfile(
     @Req() request: AuthenticatedRequest,
     @Body() dto: UpdateProfileDto,
   ) {
     return this.authService.updateProfile(request.user.id, dto);
   }
+
   @Patch('change-password')
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   changePassword(
     @Req() request: AuthenticatedRequest,
     @Body() dto: ChangePasswordDto,
