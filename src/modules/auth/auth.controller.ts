@@ -1,10 +1,19 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Req,
+  UseGuards,
+  Patch,
+} from '@nestjs/common';
 import { Request } from 'express';
 
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 
 interface AuthenticatedRequest extends Request {
   user: {
@@ -35,5 +44,10 @@ export class AuthController {
   @Get('profile')
   profile(@Req() request: AuthenticatedRequest) {
     return request.user;
+  }
+  @Patch('profile')
+  @UseGuards(JwtAuthGuard)
+  updateProfile(@Req() req, @Body() dto: UpdateProfileDto) {
+    return this.authService.updateProfile(req.user.id, dto);
   }
 }
