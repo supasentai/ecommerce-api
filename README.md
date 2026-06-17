@@ -2,7 +2,13 @@
 
 ## Overview
 
-Production-style REST API for an e-commerce backend built with NestJS, TypeScript, Prisma, and PostgreSQL. The project demonstrates practical backend engineering concerns: authentication, role-based access control, catalog management, cart workflows, checkout, order administration, stock handling, validation, error handling, and automated tests.
+Production-style REST API for an e-commerce backend built with NestJS,
+TypeScript, Prisma, and PostgreSQL.
+
+The project demonstrates practical backend engineering concerns:
+authentication, role-based access control, catalog management, cart workflows,
+checkout, order administration, stock handling, validation, error handling, and
+automated tests.
 
 ## Features
 
@@ -200,7 +206,8 @@ The Swagger document includes tags for:
 - Cart
 - Orders
 
-Bearer authentication is configured in Swagger. Log in through `POST /auth/login`, copy the `accessToken`, then authorize with:
+Bearer authentication is configured in Swagger. Log in through
+`POST /auth/login`, copy the `accessToken`, then authorize with:
 
 ```text
 Bearer <accessToken>
@@ -219,7 +226,8 @@ Collection variables:
 - `baseUrl`: default `http://localhost:3000`
 - `token`: regular user JWT
 - `adminToken`: admin JWT
-- `userId`, `categoryId`, `productId`, `cartItemId`, `orderId`: resource IDs used across requests
+- `userId`, `categoryId`, `productId`, `cartItemId`, `orderId`: resource IDs
+  used across requests
 
 The collection is organized into:
 
