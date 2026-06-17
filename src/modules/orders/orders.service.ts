@@ -148,6 +148,72 @@ export class OrdersService {
 
     return order;
   }
+
+  async cancelMyOrder(userId: string, orderId: string) {
+    return this.prisma.$transaction(async (tx) => {
+      const order = await tx.order.findFirst({
+        where: {
+          id: orderId,
+          userId,
+        },
+        include: {
+          items: true,
+        },
+      });
+
+      if (!order) {
+        throw new NotFoundException('Order not found');
+      }
+
+      if (order.status !== OrderStatus.PENDING) {
+        throw new BadRequestException('Only pending orders can be cancelled');
+      }
+
+      const updateResult = await tx.order.updateMany({
+        where: {
+          id: orderId,
+          userId,
+          status: OrderStatus.PENDING,
+        },
+        data: {
+          status: OrderStatus.CANCELLED,
+        },
+      });
+
+      if (updateResult.count === 0) {
+        throw new BadRequestException('Only pending orders can be cancelled');
+      }
+
+      await Promise.all(
+        order.items.map((item) =>
+          tx.product.update({
+            where: {
+              id: item.productId,
+            },
+            data: {
+              stock: {
+                increment: item.quantity,
+              },
+            },
+          }),
+        ),
+      );
+
+      return tx.order.findUnique({
+        where: {
+          id: orderId,
+        },
+        include: {
+          items: {
+            include: {
+              product: true,
+            },
+          },
+        },
+      });
+    });
+  }
+
   async findAllOrders(query: FindOrdersQueryDto) {
     const page = query.page ?? 1;
     const limit = query.limit ?? 10;

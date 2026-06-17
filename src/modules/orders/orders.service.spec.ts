@@ -17,6 +17,9 @@ describe('OrdersService', () => {
     order: {
       create: jest.fn(),
       findUnique: jest.fn(),
+      findMany: jest.fn(),
+      findFirst: jest.fn(),
+      count: jest.fn(),
     },
     orderItem: {
       createMany: jest.fn(),
@@ -54,9 +57,13 @@ describe('OrdersService', () => {
     }).compile();
 
     service = module.get<OrdersService>(OrdersService);
-    mockPrismaService.$transaction.mockImplementation((callback) =>
-      callback(mockPrismaService),
-    );
+    mockPrismaService.$transaction.mockImplementation((arg) => {
+      if (Array.isArray(arg)) {
+        return Promise.all(arg);
+      }
+
+      return arg(mockPrismaService);
+    });
   });
 
   afterEach(() => {
@@ -220,18 +227,75 @@ describe('OrdersService', () => {
     });
   });
 
-  it('should return find my orders skeleton response', () => {
-    expect(service.findMyOrders('user-id')).toEqual({
-      message: 'Find my orders endpoint',
-      userId: 'user-id',
+  it('should return paginated user orders', async () => {
+    const orders = [
+      {
+        id: 'order-id',
+        userId: 'user-id',
+        status: OrderStatus.PENDING,
+        items: [],
+      },
+    ];
+
+    mockPrismaService.order.findMany.mockResolvedValue(orders);
+    mockPrismaService.order.count.mockResolvedValue(1);
+
+    await expect(service.findMyOrders('user-id', {})).resolves.toEqual({
+      data: orders,
+      meta: {
+        page: 1,
+        limit: 10,
+        total: 1,
+        totalPages: 1,
+      },
+    });
+
+    expect(mockPrismaService.order.findMany).toHaveBeenCalledWith({
+      where: { userId: 'user-id' },
+      skip: 0,
+      take: 10,
+      orderBy: {
+        createdAt: 'desc',
+      },
+      include: {
+        items: true,
+      },
+    });
+    expect(mockPrismaService.order.count).toHaveBeenCalledWith({
+      where: { userId: 'user-id' },
     });
   });
 
-  it('should return find my order skeleton response', () => {
-    expect(service.findMyOrder('user-id', 'order-id')).toEqual({
-      message: 'Find my order endpoint',
+  it('should return user order detail', async () => {
+    const order = {
+      id: 'order-id',
       userId: 'user-id',
-      orderId: 'order-id',
+      status: OrderStatus.PENDING,
+      items: [],
+    };
+
+    mockPrismaService.order.findFirst.mockResolvedValue(order);
+
+    await expect(service.findMyOrder('user-id', 'order-id')).resolves.toEqual(
+      order,
+    );
+
+    expect(mockPrismaService.order.findFirst).toHaveBeenCalledWith({
+      where: {
+        id: 'order-id',
+        userId: 'user-id',
+      },
+      include: {
+        items: {
+          include: {
+            product: {
+              include: {
+                category: true,
+              },
+            },
+          },
+        },
+      },
     });
   });
 });
