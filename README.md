@@ -1,5 +1,7 @@
 # E-commerce API
 
+## Overview
+
 Production-style REST API for an e-commerce backend built with NestJS, TypeScript, Prisma, and PostgreSQL. The project demonstrates practical backend engineering concerns: authentication, role-based access control, catalog management, cart workflows, checkout, order administration, stock handling, validation, error handling, and automated tests.
 
 ## Features
@@ -70,7 +72,9 @@ Enums:
 - `Role`: `USER`, `ADMIN`
 - `OrderStatus`: `PENDING`, `PAID`, `SHIPPED`, `COMPLETED`, `CANCELLED`
 
-ERD assets:
+## ERD
+
+Generated ERD assets are stored in `docs/`:
 
 - [Mermaid ERD source](docs/ecommerce-erd.mmd)
 - [SVG ERD diagram](docs/ecommerce-erd.svg)
@@ -231,33 +235,33 @@ The collection is organized into:
 
 ```text
 ecommerce-api/
-├── docs/
-│   ├── ecommerce-api.postman_collection.json
-│   ├── ecommerce-erd.mmd
-│   └── ecommerce-erd.svg
-├── prisma/
-│   └── schema.prisma
-├── src/
-│   ├── common/
-│   │   ├── decorators/
-│   │   ├── filters/
-│   │   ├── guards/
-│   │   └── interceptors/
-│   ├── modules/
-│   │   ├── auth/
-│   │   ├── cart/
-│   │   ├── categories/
-│   │   ├── orders/
-│   │   ├── products/
-│   │   └── users/
-│   ├── prisma/
-│   ├── app.module.ts
-│   └── main.ts
-├── test/
-│   └── app.e2e-spec.ts
-├── docker-compose.yml
-├── package.json
-└── README.md
+|-- docs/
+|   |-- ecommerce-api.postman_collection.json
+|   |-- ecommerce-erd.mmd
+|   `-- ecommerce-erd.svg
+|-- prisma/
+|   `-- schema.prisma
+|-- src/
+|   |-- common/
+|   |   |-- decorators/
+|   |   |-- filters/
+|   |   |-- guards/
+|   |   `-- interceptors/
+|   |-- modules/
+|   |   |-- auth/
+|   |   |-- cart/
+|   |   |-- categories/
+|   |   |-- orders/
+|   |   |-- products/
+|   |   `-- users/
+|   |-- prisma/
+|   |-- app.module.ts
+|   `-- main.ts
+|-- test/
+|   `-- app.e2e-spec.ts
+|-- docker-compose.yml
+|-- package.json
+`-- README.md
 ```
 
 ## Core API Flow
