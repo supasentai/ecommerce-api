@@ -225,10 +225,11 @@ export class OrdersService {
         id: orderId,
       },
     });
-
     if (!order) {
       throw new NotFoundException('Order not found');
     }
+
+    this.validateStatusTransition(order.status, dto.status);
 
     return this.prisma.order.update({
       where: {
@@ -245,5 +246,32 @@ export class OrdersService {
         },
       },
     });
+  }
+  private readonly allowedStatusTransitions: Record<
+    OrderStatus,
+    OrderStatus[]
+  > = {
+    [OrderStatus.PENDING]: [OrderStatus.PAID, OrderStatus.CANCELLED],
+    [OrderStatus.PAID]: [OrderStatus.SHIPPED, OrderStatus.CANCELLED],
+    [OrderStatus.SHIPPED]: [OrderStatus.COMPLETED],
+    [OrderStatus.COMPLETED]: [],
+    [OrderStatus.CANCELLED]: [],
+  };
+
+  private validateStatusTransition(
+    currentStatus: OrderStatus,
+    nextStatus: OrderStatus,
+  ) {
+    if (currentStatus === nextStatus) {
+      return;
+    }
+
+    const allowedNextStatuses = this.allowedStatusTransitions[currentStatus];
+
+    if (!allowedNextStatuses.includes(nextStatus)) {
+      throw new BadRequestException(
+        `Cannot change order status from ${currentStatus} to ${nextStatus}`,
+      );
+    }
   }
 }
