@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="820" viewBox="0 0 1200 820" role="img" aria-labelledby="title desc">
+  <title id="title">E-commerce API ERD</title>
+  <desc id="desc">Entity relationship diagram for users, categories, products, cart items, orders, and order items.</desc>
+  <style>
+    .bg { fill: #f8fafc; }
+    .entity { fill: #ffffff; stroke: #334155; stroke-width: 2; rx: 8; }
+    .header { fill: #0f172a; }
+    .title { fill: #ffffff; font: 700 18px Arial, sans-serif; }
+    .field { fill: #1e293b; font: 14px Arial, sans-serif; }
+    .meta { fill: #64748b; font: 12px Arial, sans-serif; }
+    .rel { stroke: #2563eb; stroke-width: 2.5; fill: none; marker-end: url(#arrow); }
+    .label { fill: #1d4ed8; font: 13px Arial, sans-serif; font-weight: 700; }
+  </style>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#2563eb" />
+    </marker>
+  </defs>
+  <rect class="bg" width="1200" height="820" />
+  <text x="60" y="54" fill="#0f172a" font-family="Arial, sans-serif" font-size="30" font-weight="700">E-commerce API ERD</text>
+  <text x="60" y="82" class="meta">Generated from prisma/schema.prisma</text>
+
+  <g transform="translate(60 130)">
+    <rect class="entity" width="270" height="220" />
+    <rect class="header" width="270" height="42" rx="8" />
+    <text class="title" x="18" y="27">User</text>
+    <text class="field" x="18" y="70">id PK</text>
+    <text class="field" x="18" y="94">email UNIQUE</text>
+    <text class="field" x="18" y="118">password</text>
+    <text class="field" x="18" y="142">name nullable</text>
+    <text class="field" x="18" y="166">role USER | ADMIN</text>
+    <text class="field" x="18" y="190">createdAt, updatedAt</text>
+  </g>
+
+  <g transform="translate(465 130)">
+    <rect class="entity" width="270" height="172" />
+    <rect class="header" width="270" height="42" rx="8" />
+    <text class="title" x="18" y="27">Category</text>
+    <text class="field" x="18" y="70">id PK</text>
+    <text class="field" x="18" y="94">name</text>
+    <text class="field" x="18" y="118">slug UNIQUE</text>
+    <text class="field" x="18" y="142">createdAt, updatedAt</text>
+  </g>
+
+  <g transform="translate(870 130)">
+    <rect class="entity" width="270" height="268" />
+    <rect class="header" width="270" height="42" rx="8" />
+    <text class="title" x="18" y="27">Product</text>
+    <text class="field" x="18" y="70">id PK</text>
+    <text class="field" x="18" y="94">name, slug UNIQUE</text>
+    <text class="field" x="18" y="118">description nullable</text>
+    <text class="field" x="18" y="142">price Decimal</text>
+    <text class="field" x="18" y="166">stock Int</text>
+    <text class="field" x="18" y="190">imageUrl nullable</text>
+    <text class="field" x="18" y="214">isActive Boolean</text>
+    <text class="field" x="18" y="238">categoryId FK</text>
+  </g>
+
+  <g transform="translate(60 500)">
+    <rect class="entity" width="270" height="172" />
+    <rect class="header" width="270" height="42" rx="8" />
+    <text class="title" x="18" y="27">CartItem</text>
+    <text class="field" x="18" y="70">id PK</text>
+    <text class="field" x="18" y="94">userId FK</text>
+    <text class="field" x="18" y="118">productId FK</text>
+    <text class="field" x="18" y="142">quantity</text>
+  </g>
+
+  <g transform="translate(465 500)">
+    <rect class="entity" width="270" height="196" />
+    <rect class="header" width="270" height="42" rx="8" />
+    <text class="title" x="18" y="27">Order</text>
+    <text class="field" x="18" y="70">id PK</text>
+    <text class="field" x="18" y="94">userId FK</text>
+    <text class="field" x="18" y="118">status OrderStatus</text>
+    <text class="field" x="18" y="142">totalAmount Decimal</text>
+    <text class="field" x="18" y="166">createdAt, updatedAt</text>
+  </g>
+
+  <g transform="translate(870 500)">
+    <rect class="entity" width="270" height="172" />
+    <rect class="header" width="270" height="42" rx="8" />
+    <text class="title" x="18" y="27">OrderItem</text>
+    <text class="field" x="18" y="70">id PK</text>
+    <text class="field" x="18" y="94">orderId FK</text>
+    <text class="field" x="18" y="118">productId FK</text>
+    <text class="field" x="18" y="142">quantity, price snapshot</text>
+  </g>
+
+  <path class="rel" d="M195 350 C195 410 195 440 195 500" />
+  <text class="label" x="210" y="430">1 to many cart items</text>
+  <path class="rel" d="M330 240 C400 260 395 520 465 592" />
+  <text class="label" x="338" y="405">1 to many orders</text>
+  <path class="rel" d="M735 216 C790 216 815 230 870 252" />
+  <text class="label" x="760" y="202">1 to many products</text>
+  <path class="rel" d="M870 330 C680 430 520 485 330 586" />
+  <text class="label" x="590" y="456">product in cart</text>
+  <path class="rel" d="M735 598 C785 598 820 598 870 598" />
+  <text class="label" x="764" y="580">1 to many items</text>
+  <path class="rel" d="M1005 398 C1005 435 1005 463 1005 500" />
+  <text class="label" x="1018" y="452">product snapshot</text>
+</svg>

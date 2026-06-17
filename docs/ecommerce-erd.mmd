@@ -1,0 +1,66 @@
+erDiagram
+
+  User {
+    String id PK
+    String email UK
+    String password
+    String name
+    Role role
+    DateTime createdAt
+    DateTime updatedAt
+  }
+
+  Category {
+    String id PK
+    String name
+    String slug UK
+    DateTime createdAt
+    DateTime updatedAt
+  }
+
+  Product {
+    String id PK
+    String name
+    String slug UK
+    String description
+    Decimal price
+    Int stock
+    String imageUrl
+    Boolean isActive
+    String categoryId FK
+    DateTime createdAt
+    DateTime updatedAt
+  }
+
+  CartItem {
+    String id PK
+    String userId FK
+    String productId FK
+    Int quantity
+    DateTime createdAt
+    DateTime updatedAt
+  }
+
+  Order {
+    String id PK
+    String userId FK
+    OrderStatus status
+    Decimal totalAmount
+    DateTime createdAt
+    DateTime updatedAt
+  }
+
+  OrderItem {
+    String id PK
+    String orderId FK
+    String productId FK
+    Int quantity
+    Decimal price
+  }
+
+  User ||--o{ CartItem : owns
+  User ||--o{ Order : places
+  Category ||--o{ Product : contains
+  Product ||--o{ CartItem : appears_in
+  Order ||--o{ OrderItem : contains
+  Product ||--o{ OrderItem : purchased_as

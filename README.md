@@ -1,154 +1,304 @@
 # E-commerce API
 
-Backend learning project for internship preparation.
+## 1. Project Overview
 
-This repository is built as a step-by-step backend project to prepare for a Backend / Software Engineer Intern position.
+E-commerce API is a production-style backend project built with NestJS,
+TypeScript, Prisma, and PostgreSQL. It models the core workflows of an online
+store, including authentication, role-based administration, product catalog
+management, cart operations, checkout, order tracking, cancellation, and stock
+restoration.
 
-## Goal
+The project is designed as a portfolio-ready backend codebase that demonstrates
+REST API design, modular architecture, transactional business logic, validation,
+error handling, automated tests, and developer-friendly documentation.
 
-Build a production-style E-commerce REST API with:
+## 2. Features
 
+- User registration and login
+- JWT-based authentication
+- Password hashing with bcrypt
+- Profile update and password change endpoints
+- Role-based access control for `USER` and `ADMIN`
+- Admin user listing, lookup, role update, and deletion
+- Category CRUD
+- Product CRUD
+- Public product and category listing
+- Product search, filtering, and pagination
+- Current-user cart management
+- Cart item create, update, remove, and clear operations
+- Checkout from cart
+- Order item price snapshots
+- Atomic stock decrement during checkout
+- User order history and order detail
+- Admin order listing, detail, and status updates
+- User cancellation for pending orders
+- Atomic stock restoration when an order is cancelled
+- Standard success response interceptor
+- Centralized HTTP exception formatting
+- Unit tests and e2e tests
+- Swagger documentation
+- Postman collection
+- ERD documentation
+
+## 3. Tech Stack
+
+- Node.js
 - NestJS
 - TypeScript
 - PostgreSQL
 - Prisma ORM
-- JWT Authentication
-- Role-based Authorization
-- Docker
-- Swagger API Documentation
-- Unit and Integration Testing
+- Passport JWT
+- `@nestjs/jwt`
+- bcrypt
+- class-validator
+- class-transformer
+- Jest
+- Supertest
+- Docker Compose
+- Swagger/OpenAPI
 
-## Why this project matters for internship
+## 4. Architecture
 
-This project is designed to show practical backend engineering skills, not only coding syntax.
+The application follows a modular NestJS structure. Each domain module owns its
+controller, service, DTOs, and tests.
 
-It focuses on:
+- Controllers define HTTP routes and delegate work to services.
+- Services contain business logic and Prisma database operations.
+- DTOs validate request bodies and query parameters.
+- Guards enforce JWT authentication and role-based authorization.
+- Decorators keep role requirements declarative.
+- Filters normalize error responses.
+- Interceptors wrap successful responses consistently.
+- Prisma defines the data model and database relations.
 
-- REST API design
-- Database schema design
-- Authentication and authorization
-- Clean project structure
-- Validation and error handling
-- Docker-based development environment
-- Testing mindset
-- Git workflow with issues and branches
+Main modules:
 
-## Planned Features
+- `AuthModule`: registration, login, profile, and password management
+- `UsersModule`: admin user management
+- `CategoriesModule`: category CRUD and listing
+- `ProductsModule`: product CRUD, listing, search, and filters
+- `CartModule`: current-user cart operations
+- `OrdersModule`: checkout, order history, admin order management, cancellation
 
-### Core Modules
+## 5. Database Schema Overview
+
+The Prisma schema contains the core e-commerce entities:
+
+- `User`: stores account data, password hash, role, cart items, and orders
+- `Category`: groups products and uses a unique slug
+- `Product`: stores catalog data, price, stock, active status, and category
+- `CartItem`: connects a user to a product with a selected quantity
+- `Order`: stores order ownership, status, and total amount
+- `OrderItem`: stores order line items with quantity and snapshot price
+
+Enums:
+
+- `Role`: `USER`, `ADMIN`
+- `OrderStatus`: `PENDING`, `PAID`, `SHIPPED`, `COMPLETED`, `CANCELLED`
+
+Important relationships:
+
+- A user can have many cart items.
+- A user can place many orders.
+- A category can contain many products.
+- A product can appear in many cart items.
+- An order can contain many order items.
+- A product can appear in many order items.
+
+## 6. ERD
+
+The ERD is stored in the `docs/` folder:
+
+- [Mermaid ERD source](docs/ecommerce-erd.mmd)
+- [SVG ERD diagram](docs/ecommerce-erd.svg)
+
+![E-commerce API ERD](docs/ecommerce-erd.svg)
+
+## 7. Getting Started
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Generate Prisma Client:
+
+```bash
+npx prisma generate
+```
+
+Start the local PostgreSQL database with Docker Compose:
+
+```bash
+docker compose up -d
+```
+
+Run database migrations:
+
+```bash
+npx prisma migrate dev
+```
+
+## 8. Environment Variables
+
+Create a local environment file:
+
+```bash
+cp .env.example .env
+```
+
+Required variables:
+
+```env
+PORT=3000
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/ecommerce_db?schema=public"
+JWT_SECRET=your_jwt_secret_here
+JWT_EXPIRES_IN=1d
+```
+
+## 9. Running Locally
+
+Start the API in development mode:
+
+```bash
+npm run start:dev
+```
+
+The API runs at:
+
+```text
+http://localhost:3000
+```
+
+Useful local database commands:
+
+```bash
+docker compose up -d
+docker compose down
+docker compose down -v
+```
+
+The Docker Compose setup starts PostgreSQL 16 on port `5432` with:
+
+- Database: `ecommerce_db`
+- Username: `postgres`
+- Password: `postgres`
+
+## 10. Running Tests
+
+Run unit tests:
+
+```bash
+npm test
+```
+
+Run e2e tests:
+
+```bash
+npm run test:e2e
+```
+
+Run the TypeScript build:
+
+```bash
+npm run build
+```
+
+## 11. API Documentation
+
+Swagger UI is available after starting the application:
+
+```text
+http://localhost:3000/api/docs
+```
+
+Swagger is organized with these API tags:
 
 - Auth
 - Users
-- Products
 - Categories
+- Products
 - Cart
 - Orders
-- Reviews
 
-### Technical Features
+Bearer authentication is enabled in Swagger. Log in through `POST /auth/login`,
+copy the returned `accessToken`, then authorize with:
 
-- JWT login and registration
-- Password hashing
-- Role-based access control: Admin and User
-- PostgreSQL database
-- Prisma migrations
-- Swagger documentation
-- Docker Compose setup
-- Unit tests
-- Integration tests
-
-## Learning Roadmap
-
-### Phase 1: Project Setup
-
-- Initialize NestJS project
-- Configure TypeScript and environment variables
-- Setup basic folder structure
-- Add Git workflow rules
-
-### Phase 2: Database Foundation
-
-- Design database schema
-- Setup PostgreSQL
-- Setup Prisma
-- Create first migration
-
-### Phase 3: Product CRUD
-
-- Create Product module
-- Implement CRUD API
-- Add DTO validation
-- Add error handling
-- Document endpoints with Swagger
-
-### Phase 4: Authentication
-
-- Register user
-- Login user
-- Hash password
-- Generate JWT access token
-- Protect private routes
-
-### Phase 5: Authorization
-
-- Add user roles
-- Protect admin-only routes
-- Apply guards
-
-### Phase 6: E-commerce Business Logic
-
-- Cart module
-- Order module
-- Review module
-- Stock update logic
-
-### Phase 7: Docker and Deployment Preparation
-
-- Dockerfile
-- docker-compose.yml
-- Run API and PostgreSQL with Docker
-- Prepare production environment variables
-
-### Phase 8: Testing and CV Polish
-
-- Unit tests
-- Integration tests
-- API examples
-- Architecture diagram
-- Final README polish
-
-## Git Workflow
-
-Branch naming:
-
-```bash
-feature/task-<id>-<short-name>
+```text
+Bearer <accessToken>
 ```
 
-Example:
+## 12. Postman Collection
 
-```bash
-feature/task-1-project-setup
+The Postman collection is available at:
+
+```text
+docs/ecommerce-api.postman_collection.json
 ```
 
-Commit format:
+Collection variables:
 
-```bash
-[Task-1] Initialize NestJS project structure
+- `baseUrl`: API base URL, default `http://localhost:3000`
+- `token`: JWT for a regular user
+- `adminToken`: JWT for an admin user
+- `userId`: user resource ID
+- `categoryId`: category resource ID
+- `productId`: product resource ID
+- `cartItemId`: cart item resource ID
+- `orderId`: order resource ID
+
+Collection folders:
+
+- Auth
+- Users
+- Categories
+- Products
+- Cart
+- Orders
+- Admin Orders
+
+## 13. Folder Structure
+
+```text
+ecommerce-api/
+|-- docs/
+|   |-- ecommerce-api.postman_collection.json
+|   |-- ecommerce-erd.mmd
+|   `-- ecommerce-erd.svg
+|-- prisma/
+|   `-- schema.prisma
+|-- src/
+|   |-- common/
+|   |   |-- decorators/
+|   |   |-- filters/
+|   |   |-- guards/
+|   |   `-- interceptors/
+|   |-- modules/
+|   |   |-- auth/
+|   |   |-- cart/
+|   |   |-- categories/
+|   |   |-- orders/
+|   |   |-- products/
+|   |   `-- users/
+|   |-- prisma/
+|   |-- app.module.ts
+|   `-- main.ts
+|-- test/
+|   `-- app.e2e-spec.ts
+|-- docker-compose.yml
+|-- package.json
+`-- README.md
 ```
 
-## Definition of Done
+## 14. Core API Flow
 
-A task is done only when:
-
-- The code runs locally.
-- The README or docs are updated if needed.
-- The branch is committed with the correct commit message.
-- The pull request or merge summary explains what changed.
-- Any new concept learned is noted for interview preparation.
-
-## Current Status
-
-Project just started.
-
-Next step: complete Task 1 - Initialize NestJS project and basic repository structure.
+1. Register a user with `POST /auth/register`.
+2. Log in with `POST /auth/login` and store the JWT.
+3. Browse categories and products.
+4. Add an active product to the current user's cart.
+5. Checkout the cart to create a pending order.
+6. View current-user order history.
+7. Open a specific order detail.
+8. Cancel a pending order when needed.
+9. Use an admin account to manage users, catalog records, and order status.
