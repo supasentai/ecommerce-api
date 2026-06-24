@@ -28,13 +28,28 @@ export class OrdersService {
         if (!item.product) {
           throw new BadRequestException('Product no longer exists');
         }
+      }
 
-        if (!item.product.isActive) {
-          throw new BadRequestException('Product is not active');
-        }
+      for (const item of cartItems) {
+        const stockUpdate = await tx.product.updateMany({
+          where: {
+            id: item.productId,
+            isActive: true,
+            stock: {
+              gte: item.quantity,
+            },
+          },
+          data: {
+            stock: {
+              decrement: item.quantity,
+            },
+          },
+        });
 
-        if (item.product.stock < item.quantity) {
-          throw new BadRequestException('Not enough stock');
+        if (stockUpdate.count === 0) {
+          throw new BadRequestException(
+            `Product ${item.product.name} is not available or does not have enough stock`,
+          );
         }
       }
 
@@ -59,19 +74,6 @@ export class OrdersService {
           price: item.product.price,
         })),
       });
-
-      await Promise.all(
-        cartItems.map((item) =>
-          tx.product.update({
-            where: { id: item.productId },
-            data: {
-              stock: {
-                decrement: item.quantity,
-              },
-            },
-          }),
-        ),
-      );
 
       await tx.cartItem.deleteMany({
         where: { userId },

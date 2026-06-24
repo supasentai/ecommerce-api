@@ -122,10 +122,17 @@ Install dependencies:
 npm install
 ```
 
-Generate Prisma Client:
+Create a local environment file:
 
 ```bash
-npx prisma generate
+cp .env.example .env
+```
+
+Update `.env` with your local database URL and a strong JWT secret:
+
+```env
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/ecommerce_db?schema=public"
+JWT_SECRET=replace_with_a_strong_secret
 ```
 
 Start the local PostgreSQL database with Docker Compose:
@@ -134,28 +141,42 @@ Start the local PostgreSQL database with Docker Compose:
 docker compose up -d
 ```
 
-Run database migrations:
+Run database migrations and generate Prisma Client:
 
 ```bash
 npx prisma migrate dev
+npx prisma generate
 ```
 
 ## 8. Environment Variables
 
-Create a local environment file:
+The application validates environment variables at startup and fails fast when
+required values are missing.
+
+Create `.env` from the example file:
 
 ```bash
 cp .env.example .env
 ```
 
-Required variables:
+Environment variables:
 
 ```env
 PORT=3000
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/ecommerce_db?schema=public"
 JWT_SECRET=your_jwt_secret_here
-JWT_EXPIRES_IN=1d
+JWT_EXPIRES_IN=7d
 ```
+
+Required:
+
+- `DATABASE_URL`
+- `JWT_SECRET`
+
+Defaults:
+
+- `PORT`: `3000`
+- `JWT_EXPIRES_IN`: `7d`
 
 ## 9. Running Locally
 

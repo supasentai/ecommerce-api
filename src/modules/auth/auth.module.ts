@@ -19,7 +19,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
       useFactory: (configService: ConfigService) => {
         const jwtSecret = configService.get<string>('JWT_SECRET');
         const jwtExpiresIn =
-          configService.get<SignOptions['expiresIn']>('JWT_EXPIRES_IN') || '1d';
+          configService.get<SignOptions['expiresIn']>('JWT_EXPIRES_IN') || '7d';
 
         if (!jwtSecret) {
           throw new Error('JWT_SECRET is not defined');
