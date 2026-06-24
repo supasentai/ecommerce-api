@@ -148,6 +148,18 @@ npx prisma migrate dev
 npx prisma generate
 ```
 
+Seed demo data:
+
+```bash
+npm run seed
+```
+
+Demo accounts use the password `Password123!`:
+
+- Admin: `admin@example.com`
+- User: `user1@example.com`
+- User: `user2@example.com`
+
 ## 8. Environment Variables
 
 The application validates environment variables at startup and fails fast when
@@ -205,6 +217,18 @@ The Docker Compose setup starts PostgreSQL 16 on port `5432` with:
 - Database: `ecommerce_db`
 - Username: `postgres`
 - Password: `postgres`
+
+After migrations, seed local demo users, categories, and products:
+
+```bash
+npm run seed
+```
+
+Demo accounts:
+
+- Admin: `admin@example.com` / `Password123!`
+- User: `user1@example.com` / `Password123!`
+- User: `user2@example.com` / `Password123!`
 
 ## 10. Running Tests
 
