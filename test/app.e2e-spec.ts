@@ -76,6 +76,7 @@ function createInMemoryPrisma() {
   const prisma: any = {
     state,
     $connect: jest.fn(),
+    $queryRaw: jest.fn(async () => [{ result: 1 }]),
     $transaction: jest.fn((arg: any) => {
       if (Array.isArray(arg)) {
         return Promise.all(arg);
@@ -315,6 +316,18 @@ describe('Order checkout flow (e2e)', () => {
 
   afterAll(async () => {
     await app?.close();
+  });
+
+  it('returns health status', async () => {
+    await request(app.getHttpServer())
+      .get('/health')
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body.success).toBe(true);
+        expect(body.data.status).toBe('ok');
+        expect(body.data.database).toBe('connected');
+        expect(body.data.timestamp).toBeDefined();
+      });
   });
 
   it('registers, logs in, checks out cart, reads order, and cancels it', async () => {
