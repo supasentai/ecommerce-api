@@ -4,7 +4,6 @@ import { OrderStatus, Role } from '@prisma/client';
 import request from 'supertest';
 import { App } from 'supertest/types';
 
-import { AppModule } from '../src/app.module';
 import { HttpExceptionFilter } from '../src/common/filters/http-exception.filter';
 import { ResponseTransformInterceptor } from '../src/common/interceptors/response-transform.interceptor';
 import { PrismaService } from '../src/prisma/prisma.service';
@@ -113,6 +112,26 @@ function createInMemoryPrisma() {
     product: {
       findUnique: jest.fn(async ({ where }) => {
         return state.products.find((stored) => stored.id === where.id) ?? null;
+      }),
+      updateMany: jest.fn(async ({ where, data }) => {
+        const stored = state.products.find(
+          (item) =>
+            item.id === where.id &&
+            item.isActive === where.isActive &&
+            item.stock >= where.stock.gte,
+        );
+
+        if (!stored) {
+          return { count: 0 };
+        }
+
+        if (data.stock?.decrement) {
+          stored.stock -= data.stock.decrement;
+        }
+
+        stored.updatedAt = now();
+
+        return { count: 1 };
       }),
       update: jest.fn(async ({ where, data }) => {
         const stored = state.products.find((item) => item.id === where.id);
@@ -263,10 +282,15 @@ describe('Order checkout flow (e2e)', () => {
   let prisma: ReturnType<typeof createInMemoryPrisma>;
 
   beforeAll(async () => {
+    process.env.DATABASE_URL =
+      'postgresql://postgres:postgres@localhost:5432/ecommerce_db?schema=public';
     process.env.JWT_SECRET = 'test-secret';
-    process.env.JWT_EXPIRES_IN = '1d';
+    process.env.JWT_EXPIRES_IN = '7d';
 
     prisma = createInMemoryPrisma();
+    // Load AppModule after setting env vars because ConfigModule validates on import.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { AppModule } = require('../src/app.module');
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
@@ -290,7 +314,7 @@ describe('Order checkout flow (e2e)', () => {
   });
 
   afterAll(async () => {
-    await app.close();
+    await app?.close();
   });
 
   it('registers, logs in, checks out cart, reads order, and cancels it', async () => {

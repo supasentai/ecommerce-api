@@ -26,6 +26,7 @@ describe('OrdersService', () => {
       createMany: jest.fn(),
     },
     product: {
+      updateMany: jest.fn(),
       update: jest.fn(),
     },
   };
@@ -90,6 +91,7 @@ describe('OrdersService', () => {
   });
 
   it('should throw BadRequestException when product is inactive', async () => {
+    mockPrismaService.product.updateMany.mockResolvedValue({ count: 0 });
     mockPrismaService.cartItem.findMany.mockResolvedValue([
       {
         ...mockCartItem,
@@ -104,10 +106,26 @@ describe('OrdersService', () => {
       BadRequestException,
     );
 
+    expect(mockPrismaService.product.updateMany).toHaveBeenCalledWith({
+      where: {
+        id: 'product-id',
+        isActive: true,
+        stock: {
+          gte: 2,
+        },
+      },
+      data: {
+        stock: {
+          decrement: 2,
+        },
+      },
+    });
     expect(mockPrismaService.order.create).not.toHaveBeenCalled();
+    expect(mockPrismaService.cartItem.deleteMany).not.toHaveBeenCalled();
   });
 
   it('should throw BadRequestException when stock is insufficient', async () => {
+    mockPrismaService.product.updateMany.mockResolvedValue({ count: 0 });
     mockPrismaService.cartItem.findMany.mockResolvedValue([
       {
         ...mockCartItem,
@@ -123,7 +141,23 @@ describe('OrdersService', () => {
       BadRequestException,
     );
 
+    expect(mockPrismaService.product.updateMany).toHaveBeenCalledWith({
+      where: {
+        id: 'product-id',
+        isActive: true,
+        stock: {
+          gte: 3,
+        },
+      },
+      data: {
+        stock: {
+          decrement: 3,
+        },
+      },
+    });
     expect(mockPrismaService.order.create).not.toHaveBeenCalled();
+    expect(mockPrismaService.orderItem.createMany).not.toHaveBeenCalled();
+    expect(mockPrismaService.cartItem.deleteMany).not.toHaveBeenCalled();
   });
 
   it('should create order, order items, update stock, and clear cart', async () => {
@@ -165,9 +199,9 @@ describe('OrdersService', () => {
       mockCartItem,
       secondCartItem,
     ]);
+    mockPrismaService.product.updateMany.mockResolvedValue({ count: 1 });
     mockPrismaService.order.create.mockResolvedValue(createdOrder);
     mockPrismaService.orderItem.createMany.mockResolvedValue({ count: 2 });
-    mockPrismaService.product.update.mockResolvedValue({});
     mockPrismaService.cartItem.deleteMany.mockResolvedValue({ count: 2 });
     mockPrismaService.order.findUnique.mockResolvedValue(returnedOrder);
 
@@ -197,16 +231,28 @@ describe('OrdersService', () => {
         },
       ],
     });
-    expect(mockPrismaService.product.update).toHaveBeenCalledWith({
-      where: { id: 'product-id' },
+    expect(mockPrismaService.product.updateMany).toHaveBeenCalledWith({
+      where: {
+        id: 'product-id',
+        isActive: true,
+        stock: {
+          gte: 2,
+        },
+      },
       data: {
         stock: {
           decrement: 2,
         },
       },
     });
-    expect(mockPrismaService.product.update).toHaveBeenCalledWith({
-      where: { id: 'product-id-2' },
+    expect(mockPrismaService.product.updateMany).toHaveBeenCalledWith({
+      where: {
+        id: 'product-id-2',
+        isActive: true,
+        stock: {
+          gte: 1,
+        },
+      },
       data: {
         stock: {
           decrement: 1,
@@ -226,6 +272,62 @@ describe('OrdersService', () => {
         },
       },
     });
+  });
+
+  it('should prevent overselling when concurrent checkout attempts compete for the same stock', async () => {
+    let remainingStock = 2;
+
+    mockPrismaService.cartItem.findMany.mockImplementation(async ({ where }) => [
+      {
+        ...mockCartItem,
+        userId: where.userId,
+        quantity: 2,
+        product: {
+          ...mockProduct,
+          stock: remainingStock,
+        },
+      },
+    ]);
+    mockPrismaService.product.updateMany.mockImplementation(
+      async ({ where, data }) => {
+        if (
+          where.id === 'product-id' &&
+          where.isActive === true &&
+          remainingStock >= where.stock.gte
+        ) {
+          remainingStock -= data.stock.decrement;
+          return { count: 1 };
+        }
+
+        return { count: 0 };
+      },
+    );
+    mockPrismaService.order.create.mockImplementation(async ({ data }) => ({
+      id: `order-${data.userId}`,
+      ...data,
+    }));
+    mockPrismaService.orderItem.createMany.mockResolvedValue({ count: 1 });
+    mockPrismaService.cartItem.deleteMany.mockResolvedValue({ count: 1 });
+    mockPrismaService.order.findUnique.mockImplementation(async ({ where }) => ({
+      id: where.id,
+      status: OrderStatus.PENDING,
+      items: [],
+    }));
+
+    const results = await Promise.allSettled([
+      service.checkout('user-id-1'),
+      service.checkout('user-id-2'),
+    ]);
+
+    expect(results.filter((result) => result.status === 'fulfilled')).toHaveLength(
+      1,
+    );
+    expect(results.filter((result) => result.status === 'rejected')).toHaveLength(
+      1,
+    );
+    expect(remainingStock).toBe(0);
+    expect(mockPrismaService.order.create).toHaveBeenCalledTimes(1);
+    expect(mockPrismaService.cartItem.deleteMany).toHaveBeenCalledTimes(1);
   });
 
   it('should cancel pending order and restore stock', async () => {
