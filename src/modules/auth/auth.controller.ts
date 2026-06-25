@@ -12,8 +12,10 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiTags,
+  ApiTooManyRequestsResponse,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { Request } from 'express';
 
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -41,11 +43,16 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @ApiTooManyRequestsResponse({
+    description: 'Too many registration attempts',
+  })
   register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
   }
 
   @Post('login')
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @ApiOperation({ summary: 'Log in and receive access and refresh tokens' })
   @ApiOkResponse({
     schema: {
@@ -63,11 +70,13 @@ export class AuthController {
       },
     },
   })
+  @ApiTooManyRequestsResponse({ description: 'Too many login attempts' })
   login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto);
   }
 
   @Post('refresh')
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @ApiOperation({ summary: 'Rotate refresh token and issue new tokens' })
   @ApiOkResponse({
     schema: {
@@ -86,6 +95,7 @@ export class AuthController {
     },
   })
   @ApiUnauthorizedResponse({ description: 'Invalid refresh token' })
+  @ApiTooManyRequestsResponse({ description: 'Too many refresh attempts' })
   refresh(@Body() dto: RefreshTokenDto) {
     return this.authService.refresh(dto);
   }

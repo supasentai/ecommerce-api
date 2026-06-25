@@ -18,6 +18,7 @@ error handling, automated tests, and developer-friendly documentation.
 
 - User registration and login
 - JWT-based authentication
+- Rate limiting for authentication endpoints
 - Password hashing with bcrypt
 - Profile update and password change endpoints
 - Role-based access control for `USER` and `ADMIN`
@@ -51,6 +52,7 @@ error handling, automated tests, and developer-friendly documentation.
 - Prisma ORM
 - Passport JWT
 - `@nestjs/jwt`
+- `@nestjs/throttler`
 - bcrypt
 - class-validator
 - class-transformer
@@ -313,6 +315,16 @@ copy the returned `accessToken`, then authorize with:
 ```text
 Bearer <accessToken>
 ```
+
+Auth endpoints are rate limited to reduce brute-force and token abuse:
+
+- Global default: 100 requests per 60 seconds
+- `POST /auth/register`: 5 requests per 60 seconds
+- `POST /auth/login`: 5 requests per 60 seconds
+- `POST /auth/refresh`: 10 requests per 60 seconds
+
+When a client exceeds the configured limit, the API returns `429 Too Many
+Requests` using the standard error response format.
 
 ## 12. Postman Collection
 

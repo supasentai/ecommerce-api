@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -18,6 +20,16 @@ import { validateEnv } from './config/env.validation';
       isGlobal: true,
       validate: validateEnv,
     }),
+    ThrottlerModule.forRoot({
+      errorMessage: 'Too many requests',
+      throttlers: [
+        {
+          name: 'default',
+          ttl: 60_000,
+          limit: 100,
+        },
+      ],
+    }),
     PrismaModule,
     ProductsModule,
     CategoriesModule,
@@ -27,6 +39,12 @@ import { validateEnv } from './config/env.validation';
     OrdersModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}
