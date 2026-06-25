@@ -1,51 +1,47 @@
-# E-commerce API
+# E-commerce Backend API
 
 [![CI](https://github.com/supasentai/ecommerce-backend-api/actions/workflows/ci.yml/badge.svg)](https://github.com/supasentai/ecommerce-backend-api/actions/workflows/ci.yml)
 
-## 1. Project Overview
+## Overview
 
-E-commerce API is a production-style backend project built with NestJS,
-TypeScript, Prisma, and PostgreSQL. It models the core workflows of an online
-store, including authentication, role-based administration, product catalog
-management, cart operations, checkout, order tracking, cancellation, and stock
-restoration.
+E-commerce Backend API is a RESTful backend service for a full-stack e-commerce project. It is built with NestJS, TypeScript, Prisma ORM, and PostgreSQL, and provides the API layer consumed by a Next.js frontend.
 
-The project is designed as a portfolio-ready backend codebase that demonstrates
-REST API design, modular architecture, transactional business logic, validation,
-error handling, automated tests, and developer-friendly documentation.
+The project demonstrates a modular backend architecture with authentication, role-based authorization, product catalog APIs, cart workflows, checkout, order tracking, request validation, centralized error formatting, Swagger/OpenAPI documentation, and Prisma-based database management.
 
-## 2. Features
+Local services:
 
-- User registration and login
-- JWT-based authentication
-- Rate limiting for authentication endpoints
+- Backend API: `http://localhost:3000`
+- Frontend app: `http://localhost:3001`
+- Swagger UI: `http://localhost:3000/api/docs`
+- Frontend repository: [https://github.com/supasentai/ecommerce-frontend-nextjs](https://github.com/supasentai/ecommerce-frontend-nextjs)
+
+## Features
+
+- REST API built with NestJS modules, controllers, services, DTOs, guards, filters, and interceptors
+- PostgreSQL persistence through Prisma ORM
+- Prisma schema with `User`, `Category`, `Product`, `CartItem`, `Order`, and `OrderItem` models
+- Database migrations stored in `prisma/migrations`
+- Seed script for demo users, categories, and products
+- JWT authentication with access tokens and refresh token rotation
 - Password hashing with bcrypt
-- Profile update and password change endpoints
+- Register, login, refresh token, logout, profile, profile update, and password change endpoints
 - Role-based access control for `USER` and `ADMIN`
-- Admin user listing, lookup, role update, and deletion
-- Category CRUD
-- Product CRUD
-- Public product and category listing
-- Standardized list pagination metadata
-- Product search, filtering, sorting, and pagination
-- Current-user cart management
-- Cart item create, update, remove, and clear operations
-- Checkout from cart
-- Order item price snapshots
-- Atomic stock decrement during checkout
-- User order history and order detail
-- Admin order listing, detail, and status updates
-- Order filtering and sorting for user/admin lists
-- User cancellation for pending orders
-- Atomic stock restoration when an order is cancelled
-- Standard success response interceptor
-- Centralized HTTP exception formatting
-- Unit tests and e2e tests
-- Swagger documentation
-- Postman collection
-- ERD documentation
+- Product listing with pagination, search, category filter, active-status filter, price range filter, and sorting
+- Product detail endpoint by product `id`
+- Admin-only product create, update, and delete endpoints
+- Category listing and admin-only category management
+- Authenticated cart item management
+- Checkout from cart with transactional stock decrement
+- User order history, order detail, and pending-order cancellation
+- Admin order listing, order detail, and order status update endpoints
+- Admin user management endpoints
+- Global validation pipe with whitelist and request transformation
+- Global response transform interceptor and HTTP exception filter
+- CORS configured for the local Next.js frontend at `http://localhost:3001`
+- Swagger/OpenAPI documentation at `/api/docs`
+- Jest unit and e2e test scripts
 
-## 3. Tech Stack
+## Tech Stack
 
 - Node.js
 - NestJS
@@ -54,6 +50,8 @@ error handling, automated tests, and developer-friendly documentation.
 - Prisma ORM
 - Passport JWT
 - `@nestjs/jwt`
+- `@nestjs/config`
+- `@nestjs/swagger`
 - `@nestjs/throttler`
 - bcrypt
 - class-validator
@@ -61,66 +59,45 @@ error handling, automated tests, and developer-friendly documentation.
 - Jest
 - Supertest
 - Docker Compose
-- Swagger/OpenAPI
 
-## 4. Architecture
+## Project Structure
 
-The application follows a modular NestJS structure. Each domain module owns its
-controller, service, DTOs, and tests.
+```text
+ecommerce-backend-api/
+|-- docs/
+|   |-- ecommerce-api.postman_collection.json
+|   |-- ecommerce-erd.mmd
+|   `-- ecommerce-erd.svg
+|-- prisma/
+|   |-- migrations/
+|   |-- schema.prisma
+|   `-- seed.ts
+|-- src/
+|   |-- common/
+|   |   |-- decorators/
+|   |   |-- filters/
+|   |   |-- guards/
+|   |   |-- interceptors/
+|   |   `-- pagination/
+|   |-- config/
+|   |-- modules/
+|   |   |-- auth/
+|   |   |-- cart/
+|   |   |-- categories/
+|   |   |-- orders/
+|   |   |-- products/
+|   |   `-- users/
+|   |-- prisma/
+|   |-- app.module.ts
+|   `-- main.ts
+|-- test/
+|-- docker-compose.yml
+|-- Dockerfile
+|-- package.json
+`-- README.md
+```
 
-- Controllers define HTTP routes and delegate work to services.
-- Services contain business logic and Prisma database operations.
-- DTOs validate request bodies and query parameters.
-- Guards enforce JWT authentication and role-based authorization.
-- Decorators keep role requirements declarative.
-- Filters normalize error responses.
-- Interceptors wrap successful responses consistently.
-- Prisma defines the data model and database relations.
-
-Main modules:
-
-- `AuthModule`: registration, login, profile, and password management
-- `UsersModule`: admin user management
-- `CategoriesModule`: category CRUD and listing
-- `ProductsModule`: product CRUD, listing, search, and filters
-- `CartModule`: current-user cart operations
-- `OrdersModule`: checkout, order history, admin order management, cancellation
-
-## 5. Database Schema Overview
-
-The Prisma schema contains the core e-commerce entities:
-
-- `User`: stores account data, password hash, role, cart items, and orders
-- `Category`: groups products and uses a unique slug
-- `Product`: stores catalog data, price, stock, active status, and category
-- `CartItem`: connects a user to a product with a selected quantity
-- `Order`: stores order ownership, status, and total amount
-- `OrderItem`: stores order line items with quantity and snapshot price
-
-Enums:
-
-- `Role`: `USER`, `ADMIN`
-- `OrderStatus`: `PENDING`, `PAID`, `SHIPPED`, `COMPLETED`, `CANCELLED`
-
-Important relationships:
-
-- A user can have many cart items.
-- A user can place many orders.
-- A category can contain many products.
-- A product can appear in many cart items.
-- An order can contain many order items.
-- A product can appear in many order items.
-
-## 6. ERD
-
-The ERD is stored in the `docs/` folder:
-
-- [Mermaid ERD source](docs/ecommerce-erd.mmd)
-- [SVG ERD diagram](docs/ecommerce-erd.svg)
-
-![E-commerce API ERD](docs/ecommerce-erd.svg)
-
-## 7. Getting Started
+## Getting Started
 
 Install dependencies:
 
@@ -134,29 +111,23 @@ Create a local environment file:
 cp .env.example .env
 ```
 
-Update `.env` with your local database URL and a strong JWT secret:
+Update `.env` with your PostgreSQL connection string and JWT secret.
 
-```env
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/ecommerce_db?schema=public"
-JWT_SECRET=replace_with_a_strong_secret
-```
-
-Start only the local PostgreSQL database for host-based development:
+Start the local PostgreSQL service with Docker Compose:
 
 ```bash
 docker compose up -d postgres
 ```
 
-If port `5432` is already in use, choose another host port:
-
-```bash
-POSTGRES_PORT=5433 docker compose up -d postgres
-```
-
-Run database migrations and generate Prisma Client:
+Run database migrations:
 
 ```bash
 npx prisma migrate dev
+```
+
+Generate Prisma Client:
+
+```bash
 npx prisma generate
 ```
 
@@ -166,263 +137,320 @@ Seed demo data:
 npm run seed
 ```
 
-Demo accounts use the password `Password123!`:
-
-- Admin: `admin@example.com`
-- User: `user1@example.com`
-- User: `user2@example.com`
-
-## 8. Environment Variables
-
-The application validates environment variables at startup and fails fast when
-required values are missing.
-
-Create `.env` from the example file:
-
-```bash
-cp .env.example .env
-```
-
-Environment variables:
-
-```env
-PORT=3000
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/ecommerce_db?schema=public"
-JWT_SECRET=your_jwt_secret_here
-JWT_EXPIRES_IN=7d
-```
-
-Required:
-
-- `DATABASE_URL`
-- `JWT_SECRET`
-
-Defaults:
-
-- `PORT`: `3000`
-- `JWT_EXPIRES_IN`: `7d`
-
-## 9. Running Locally
-
 Start the API in development mode:
 
 ```bash
 npm run start:dev
 ```
 
-The API runs at:
+The API will be available at:
 
 ```text
 http://localhost:3000
 ```
 
-Useful local database commands:
+## Environment Variables
+
+This project includes a `.env.example` file:
+
+```env
+PORT=3000
+
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/ecommerce_db?schema=public"
+
+JWT_SECRET=your_jwt_secret_here
+JWT_EXPIRES_IN=7d
+```
+
+Environment variables used by the application:
+
+| Variable | Required | Default | Description |
+| --- | --- | --- | --- |
+| `PORT` | No | `3000` | Port used by the NestJS server. |
+| `DATABASE_URL` | Yes | None | PostgreSQL connection string used by Prisma. |
+| `JWT_SECRET` | Yes | None | Secret used to sign and verify JWTs. |
+| `JWT_EXPIRES_IN` | No | `7d` | Access token expiration passed to `@nestjs/jwt`. |
+
+The app validates environment variables during startup and fails fast if `DATABASE_URL`, `JWT_SECRET`, or a valid `PORT` value is missing.
+
+## Database Setup
+
+The Prisma datasource is configured for PostgreSQL:
+
+```prisma
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+```
+
+For local development, the included `docker-compose.yml` can start a PostgreSQL database:
 
 ```bash
 docker compose up -d postgres
-docker compose down
-docker compose down -v
 ```
 
-The host PostgreSQL port defaults to `5432`. Override it with `POSTGRES_PORT`
-when needed:
+Default local database settings:
+
+| Setting | Value |
+| --- | --- |
+| Database | `ecommerce_db` |
+| Username | `postgres` |
+| Password | `postgres` |
+| Host port | `5432` |
+
+After the database is running, apply migrations and seed demo data:
 
 ```bash
-POSTGRES_PORT=5433 docker compose up -d postgres
+npx prisma migrate dev
+npm run seed
 ```
 
-The Docker Compose setup starts PostgreSQL 16 on port `5432` with:
+The seed script creates demo users, categories, and products. Demo account password:
 
-- Database: `ecommerce_db`
-- Username: `postgres`
-- Password: `postgres`
+```text
+Password123!
+```
 
-After migrations, seed local demo users, categories, and products:
+Seeded accounts:
+
+| Role | Email |
+| --- | --- |
+| Admin | `admin@example.com` |
+| User | `user1@example.com` |
+| User | `user2@example.com` |
+
+## Prisma Commands
+
+Generate Prisma Client:
+
+```bash
+npx prisma generate
+```
+
+Create and apply a development migration:
+
+```bash
+npx prisma migrate dev
+```
+
+Apply pending migrations in production or CI:
+
+```bash
+npx prisma migrate deploy
+```
+
+Open Prisma Studio:
+
+```bash
+npx prisma studio
+```
+
+Run the project seed script:
 
 ```bash
 npm run seed
 ```
 
-Demo accounts:
+Note: this project currently exposes seeding through the `npm run seed` script, which runs `ts-node prisma/seed.ts`.
 
-- Admin: `admin@example.com` / `Password123!`
-- User: `user1@example.com` / `Password123!`
-- User: `user2@example.com` / `Password123!`
+## Available Scripts
 
-Run the full stack with Docker Compose:
+| Script | Description |
+| --- | --- |
+| `npm run build` | Compile the NestJS application. |
+| `npm run format` | Format source and test files with Prettier. |
+| `npm run start` | Start the NestJS application. |
+| `npm run start:dev` | Start the app in watch mode for local development. |
+| `npm run start:debug` | Start the app in debug watch mode. |
+| `npm run start:prod` | Run the compiled app from `dist/main`. |
+| `npm run lint` | Run ESLint with auto-fix. |
+| `npm run seed` | Seed demo data with `ts-node prisma/seed.ts`. |
+| `npm run test` | Run unit tests. |
+| `npm run test:watch` | Run tests in watch mode. |
+| `npm run test:cov` | Run tests with coverage. |
+| `npm run test:debug` | Run Jest in debug mode. |
+| `npm run test:e2e` | Run e2e tests with `test/jest-e2e.json`. |
 
-```bash
-docker compose up --build
+## API Endpoints
+
+Base URL:
+
+```text
+http://localhost:3000
 ```
 
-If host port `3000` is already in use, choose another API port:
+### Health
 
-```bash
-API_PORT=3001 docker compose up --build
-```
+| Method | Endpoint | Auth | Description |
+| --- | --- | --- | --- |
+| `GET` | `/` | Public | Basic root response. |
+| `GET` | `/health` | Public | Application and database health check. |
 
-The API container runs migrations before starting. In Docker Compose,
-`DATABASE_URL` points to the `postgres` service:
+### Auth
 
-```env
-DATABASE_URL="postgresql://postgres:postgres@postgres:5432/ecommerce_db?schema=public"
-```
+| Method | Endpoint | Auth | Description |
+| --- | --- | --- | --- |
+| `POST` | `/auth/register` | Public | Register a new user. |
+| `POST` | `/auth/login` | Public | Log in and receive access and refresh tokens. |
+| `POST` | `/auth/refresh` | Public | Rotate refresh token and receive new tokens. |
+| `POST` | `/auth/logout` | Public | Revoke the current refresh token. |
+| `GET` | `/auth/profile` | Bearer token | Get the authenticated user's profile. |
+| `PATCH` | `/auth/profile` | Bearer token | Update the authenticated user's profile. |
+| `PATCH` | `/auth/change-password` | Bearer token | Change the authenticated user's password. |
 
-Swagger is available at:
+### Products
+
+| Method | Endpoint | Auth | Description |
+| --- | --- | --- | --- |
+| `GET` | `/products` | Public | List products with pagination, search, filters, and sorting. |
+| `GET` | `/products/:id` | Public | Get a product by product `id`. This endpoint does not perform slug lookup. |
+| `POST` | `/products` | Admin bearer token | Create a product. |
+| `PATCH` | `/products/:id` | Admin bearer token | Update a product by product `id`. |
+| `DELETE` | `/products/:id` | Admin bearer token | Delete a product by product `id`. |
+
+Supported product query parameters:
+
+| Parameter | Description |
+| --- | --- |
+| `page` | Page number, default `1`. |
+| `limit` | Page size from `1` to `100`, default `10`. |
+| `search` | Case-insensitive search against product name and slug. |
+| `categoryId` | Filter by category UUID. |
+| `isActive` | Filter by active status using `true` or `false`. |
+| `minPrice` | Minimum product price. |
+| `maxPrice` | Maximum product price. |
+| `sortBy` | Sort by `createdAt`, `price`, or `name`. |
+| `sortOrder` | Sort direction: `asc` or `desc`. |
+
+### Categories
+
+| Method | Endpoint | Auth | Description |
+| --- | --- | --- | --- |
+| `GET` | `/categories` | Public | List categories with pagination, search, and sorting. |
+| `GET` | `/categories/:id` | Public | Get a category by category `id`. |
+| `POST` | `/categories` | Admin bearer token | Create a category. |
+| `PATCH` | `/categories/:id` | Admin bearer token | Update a category by category `id`. |
+| `DELETE` | `/categories/:id` | Admin bearer token | Delete a category by category `id`. |
+
+Supported category query parameters:
+
+| Parameter | Description |
+| --- | --- |
+| `page` | Page number, default `1`. |
+| `limit` | Page size from `1` to `100`, default `10`. |
+| `search` | Search categories. |
+| `sortBy` | Sort by `createdAt` or `name`. |
+| `sortOrder` | Sort direction: `asc` or `desc`. |
+
+### Cart
+
+All cart routes require a Bearer access token.
+
+| Method | Endpoint | Auth | Description |
+| --- | --- | --- | --- |
+| `GET` | `/cart` | Bearer token | Get the authenticated user's cart with totals. |
+| `POST` | `/cart/items` | Bearer token | Add a product to the authenticated user's cart. |
+| `PATCH` | `/cart/items/:id` | Bearer token | Update a cart item quantity by cart item `id`. |
+| `DELETE` | `/cart/items/:id` | Bearer token | Remove a cart item by cart item `id`. |
+| `DELETE` | `/cart` | Bearer token | Clear the authenticated user's cart. |
+
+### Orders
+
+Order routes require a Bearer access token. Admin routes additionally require the `ADMIN` role.
+
+| Method | Endpoint | Auth | Description |
+| --- | --- | --- | --- |
+| `POST` | `/orders/checkout` | Bearer token | Create an order from the authenticated user's cart. |
+| `GET` | `/orders` | Bearer token | List the authenticated user's orders. |
+| `GET` | `/orders/:id` | Bearer token | Get one authenticated-user order by order `id`. |
+| `PATCH` | `/orders/:id/cancel` | Bearer token | Cancel a pending authenticated-user order by order `id`. |
+| `GET` | `/orders/admin/all` | Admin bearer token | List all orders. |
+| `GET` | `/orders/admin/:id` | Admin bearer token | Get any order by order `id`. |
+| `PATCH` | `/orders/admin/:id/status` | Admin bearer token | Update an order status by order `id`. |
+
+Supported order query parameters:
+
+| Parameter | Description |
+| --- | --- |
+| `page` | Page number, default `1`. |
+| `limit` | Page size from `1` to `100`, default `10`. |
+| `status` | Filter by `PENDING`, `PAID`, `SHIPPED`, `COMPLETED`, or `CANCELLED`. |
+| `userId` | Admin listing filter by user UUID. |
+| `fromDate` | Filter orders created after an ISO date. |
+| `toDate` | Filter orders created before an ISO date. |
+| `sortBy` | Sort by `createdAt`, `totalAmount`, or `status`. |
+| `sortOrder` | Sort direction: `asc` or `desc`. |
+
+### Users
+
+All user management routes require an admin Bearer token.
+
+| Method | Endpoint | Auth | Description |
+| --- | --- | --- | --- |
+| `GET` | `/users` | Admin bearer token | List users. |
+| `GET` | `/users/:id` | Admin bearer token | Get a user by user `id`. |
+| `PATCH` | `/users/:id/role` | Admin bearer token | Update a user's role. |
+| `DELETE` | `/users/:id` | Admin bearer token | Delete a user by user `id`. |
+
+## Swagger Documentation
+
+Swagger/OpenAPI is configured in `src/main.ts` and served at:
 
 ```text
 http://localhost:3000/api/docs
 ```
 
-## 10. Running Tests
+Swagger is configured with Bearer authentication. To test protected routes:
 
-Run unit tests:
-
-```bash
-npm test
-```
-
-Run e2e tests:
-
-```bash
-npm run test:e2e
-```
-
-Run the TypeScript build:
-
-```bash
-npm run build
-```
-
-## 11. API Documentation
-
-Swagger UI is available after starting the application:
-
-```text
-http://localhost:3000/api/docs
-```
-
-Swagger is organized with these API tags:
-
-- Auth
-- Users
-- Categories
-- Products
-- Cart
-- Orders
-
-Bearer authentication is enabled in Swagger. Log in through `POST /auth/login`,
-copy the returned `accessToken`, then authorize with:
+1. Start the backend with `npm run start:dev`.
+2. Open `http://localhost:3000/api/docs`.
+3. Use `POST /auth/login` with one of the seeded accounts.
+4. Copy the returned `accessToken`.
+5. Click **Authorize** and enter:
 
 ```text
 Bearer <accessToken>
 ```
 
-Auth endpoints are rate limited to reduce brute-force and token abuse:
+## Frontend Integration
 
-- Global default: 100 requests per 60 seconds
-- `POST /auth/register`: 5 requests per 60 seconds
-- `POST /auth/login`: 5 requests per 60 seconds
-- `POST /auth/refresh`: 10 requests per 60 seconds
+This backend is designed to serve the Next.js frontend repository:
 
-When a client exceeds the configured limit, the API returns `429 Too Many
-Requests` using the standard error response format.
+[https://github.com/supasentai/ecommerce-frontend-nextjs](https://github.com/supasentai/ecommerce-frontend-nextjs)
 
-## 12. Postman Collection
+Local integration defaults:
 
-The Postman collection is available at:
+| Service | URL |
+| --- | --- |
+| Backend API | `http://localhost:3000` |
+| Frontend App | `http://localhost:3001` |
+| Swagger UI | `http://localhost:3000/api/docs` |
 
-```text
-docs/ecommerce-api.postman_collection.json
-```
-
-Collection variables:
-
-- `baseUrl`: API base URL, default `http://localhost:3000`
-- `token`: JWT for a regular user
-- `adminToken`: JWT for an admin user
-- `userId`: user resource ID
-- `categoryId`: category resource ID
-- `productId`: product resource ID
-- `cartItemId`: cart item resource ID
-- `orderId`: order resource ID
-
-Collection folders:
-
-- Auth
-- Users
-- Categories
-- Products
-- Cart
-- Orders
-- Admin Orders
-
-## 13. Folder Structure
+CORS is configured in `src/main.ts` to allow requests from:
 
 ```text
-ecommerce-api/
-|-- docs/
-|   |-- ecommerce-api.postman_collection.json
-|   |-- ecommerce-erd.mmd
-|   `-- ecommerce-erd.svg
-|-- prisma/
-|   `-- schema.prisma
-|-- src/
-|   |-- common/
-|   |   |-- decorators/
-|   |   |-- filters/
-|   |   |-- guards/
-|   |   `-- interceptors/
-|   |-- modules/
-|   |   |-- auth/
-|   |   |-- cart/
-|   |   |-- categories/
-|   |   |-- orders/
-|   |   |-- products/
-|   |   `-- users/
-|   |-- prisma/
-|   |-- app.module.ts
-|   `-- main.ts
-|-- test/
-|   `-- app.e2e-spec.ts
-|-- docker-compose.yml
-|-- package.json
-`-- README.md
+http://localhost:3001
 ```
 
-## 14. Core API Flow
+Allowed CORS methods:
 
-1. Register a user with `POST /auth/register`.
-2. Log in with `POST /auth/login` and store the JWT.
-3. Browse categories and products.
-4. Add an active product to the current user's cart.
-5. Checkout the cart to create a pending order.
-6. View current-user order history.
-7. Open a specific order detail.
-8. Cancel a pending order when needed.
-9. Use an admin account to manage users, catalog records, and order status.
+```text
+GET, POST, PUT, PATCH, DELETE, OPTIONS
+```
 
-## 15. Fullstack Roadmap
+Allowed headers:
 
-This backend API is designed to be integrated with a dedicated Next.js frontend.
+```text
+Content-Type, Authorization
+```
 
-Frontend repository: Coming soon
+## Future Improvements
 
-Planned frontend stack:
-
-- Next.js App Router
-- TypeScript
-- Tailwind CSS
-- shadcn/ui
-- TanStack Query
-- Zustand
-- React Hook Form + Zod
-
-Planned frontend features:
-
-- Product listing and product detail pages
-- Authentication pages
-- Shopping cart
-- Checkout flow
-- User order history
-- Admin dashboard for products, categories, orders, and users
+- Add product image upload/storage integration.
+- Add stricter API response DTOs for public-facing resources.
+- Add refresh-token device/session tracking.
+- Add more e2e coverage for cart, checkout, and admin workflows.
+- Add production deployment documentation.
+- Add CI steps for Prisma migration checks.
+- Add observability with structured logging and request tracing.
