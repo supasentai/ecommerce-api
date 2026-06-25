@@ -131,6 +131,94 @@ function createInMemoryPrisma() {
       }),
     },
     product: {
+      findMany: jest.fn(async ({ where = {}, include, orderBy, skip = 0, take = 10 }) => {
+        let products = state.products.filter((stored) => {
+          const matchesCategory =
+            !where.categoryId || stored.categoryId === where.categoryId;
+          const matchesActive =
+            where.isActive === undefined || stored.isActive === where.isActive;
+          const matchesPrice =
+            (!where.price?.gte || Number(stored.price) >= where.price.gte) &&
+            (!where.price?.lte || Number(stored.price) <= where.price.lte);
+          const matchesSearch =
+            !where.OR ||
+            where.OR.some((condition: any) => {
+              if (condition.name?.contains) {
+                return stored.name
+                  .toLowerCase()
+                  .includes(condition.name.contains.toLowerCase());
+              }
+
+              if (condition.slug?.contains) {
+                return stored.slug
+                  .toLowerCase()
+                  .includes(condition.slug.contains.toLowerCase());
+              }
+
+              return false;
+            });
+
+          return (
+            matchesCategory && matchesActive && matchesPrice && matchesSearch
+          );
+        });
+
+        if (orderBy) {
+          const [[field, direction]] = Object.entries(orderBy);
+          products = [...products].sort((first: any, second: any) => {
+            const firstValue = first[field];
+            const secondValue = second[field];
+
+            if (firstValue < secondValue) {
+              return direction === 'asc' ? -1 : 1;
+            }
+
+            if (firstValue > secondValue) {
+              return direction === 'asc' ? 1 : -1;
+            }
+
+            return 0;
+          });
+        }
+
+        const pageItems = products.slice(skip, skip + take);
+
+        return include?.category
+          ? pageItems.map((item) => ({ ...item, category }))
+          : pageItems;
+      }),
+      count: jest.fn(async ({ where = {} }) => {
+        return state.products.filter((stored) => {
+          const matchesCategory =
+            !where.categoryId || stored.categoryId === where.categoryId;
+          const matchesActive =
+            where.isActive === undefined || stored.isActive === where.isActive;
+          const matchesPrice =
+            (!where.price?.gte || Number(stored.price) >= where.price.gte) &&
+            (!where.price?.lte || Number(stored.price) <= where.price.lte);
+          const matchesSearch =
+            !where.OR ||
+            where.OR.some((condition: any) => {
+              if (condition.name?.contains) {
+                return stored.name
+                  .toLowerCase()
+                  .includes(condition.name.contains.toLowerCase());
+              }
+
+              if (condition.slug?.contains) {
+                return stored.slug
+                  .toLowerCase()
+                  .includes(condition.slug.contains.toLowerCase());
+              }
+
+              return false;
+            });
+
+          return (
+            matchesCategory && matchesActive && matchesPrice && matchesSearch
+          );
+        }).length;
+      }),
       findUnique: jest.fn(async ({ where }) => {
         return state.products.find((stored) => stored.id === where.id) ?? null;
       }),
@@ -355,6 +443,38 @@ describe('Order checkout flow (e2e)', () => {
         expect(body.data.status).toBe('ok');
         expect(body.data.database).toBe('connected');
         expect(body.data.timestamp).toBeDefined();
+      });
+  });
+
+  it('returns products with standardized pagination metadata', async () => {
+    const categoryId = prisma.state.categories[0].id;
+
+    await request(app.getHttpServer())
+      .get('/products')
+      .query({
+        page: 1,
+        limit: 10,
+        categoryId,
+        isActive: true,
+        search: 'Seed',
+        minPrice: 50,
+        maxPrice: 150,
+        sortBy: 'price',
+        sortOrder: 'asc',
+      })
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body.success).toBe(true);
+        expect(body.data.data).toHaveLength(1);
+        expect(body.data.data[0].categoryId).toBe(categoryId);
+        expect(body.data.meta).toEqual({
+          page: 1,
+          limit: 10,
+          total: 1,
+          totalPages: 1,
+          hasNextPage: false,
+          hasPreviousPage: false,
+        });
       });
   });
 

@@ -44,12 +44,14 @@ describe('UsersController', () => {
     };
 
     const result = {
-      items: [],
+      data: [],
       meta: {
         page: 1,
         limit: 10,
-        totalItems: 0,
+        total: 0,
         totalPages: 0,
+        hasNextPage: false,
+        hasPreviousPage: false,
       },
     };
 

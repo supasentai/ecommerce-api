@@ -5,6 +5,7 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { Prisma } from '@prisma/client';
 import { ProductQueryDto } from './dto/product-query.dto';
+import { createPaginatedResponse } from '../../common/pagination/pagination';
 
 @Injectable()
 export class ProductsService {
@@ -25,6 +26,8 @@ export class ProductsService {
     const page = query.page ?? 1;
     const limit = query.limit ?? 10;
     const skip = (page - 1) * limit;
+    const sortBy = query.sortBy ?? 'createdAt';
+    const sortOrder = query.sortOrder ?? 'desc';
 
     const where: Prisma.ProductWhereInput = {
       ...(query.search
@@ -47,16 +50,24 @@ export class ProductsService {
         : {}),
       ...(query.categoryId ? { categoryId: query.categoryId } : {}),
       ...(query.isActive !== undefined ? { isActive: query.isActive } : {}),
+      ...(query.minPrice !== undefined || query.maxPrice !== undefined
+        ? {
+            price: {
+              ...(query.minPrice !== undefined ? { gte: query.minPrice } : {}),
+              ...(query.maxPrice !== undefined ? { lte: query.maxPrice } : {}),
+            },
+          }
+        : {}),
     };
 
-    const [items, totalItems] = await this.prisma.$transaction([
+    const [items, total] = await this.prisma.$transaction([
       this.prisma.product.findMany({
         where,
         include: {
           category: true,
         },
         orderBy: {
-          createdAt: 'desc',
+          [sortBy]: sortOrder,
         },
         skip,
         take: limit,
@@ -66,17 +77,7 @@ export class ProductsService {
       }),
     ]);
 
-    const totalPages = Math.ceil(totalItems / limit);
-
-    return {
-      items,
-      meta: {
-        page,
-        limit,
-        totalItems,
-        totalPages,
-      },
-    };
+    return createPaginatedResponse(items, total, page, limit);
   }
 
   async findOne(id: string) {

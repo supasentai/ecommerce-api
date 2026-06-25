@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Role } from '@prisma/client';
+import { createPaginatedResponse } from '../../common/pagination/pagination';
 import { PrismaService } from '../../prisma/prisma.service';
 import { GetUsersQueryDto } from './dto/get-users-query.dto';
 
@@ -11,6 +12,8 @@ export class UsersService {
     const page = query.page ?? 1;
     const limit = query.limit ?? 10;
     const skip = (page - 1) * limit;
+    const sortBy = query.sortBy ?? 'createdAt';
+    const sortOrder = query.sortOrder ?? 'desc';
 
     const where = {
       ...(query.search && {
@@ -40,22 +43,14 @@ export class UsersService {
         skip,
         take: limit,
         orderBy: {
-          createdAt: 'desc',
+          [sortBy]: sortOrder,
         },
         select: this.userSelect(),
       }),
       this.prisma.user.count({ where }),
     ]);
 
-    return {
-      items,
-      meta: {
-        page,
-        limit,
-        totalItems,
-        totalPages: Math.ceil(totalItems / limit),
-      },
-    };
+    return createPaginatedResponse(items, totalItems, page, limit);
   }
 
   async findOne(id: string) {

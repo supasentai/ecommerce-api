@@ -1,6 +1,9 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import { IsIn, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+
+const CATEGORY_SORT_FIELDS = ['createdAt', 'name'] as const;
+const SORT_ORDERS = ['asc', 'desc'] as const;
 
 export class CategoryQueryDto {
   @ApiPropertyOptional({ example: 1, minimum: 1, default: 1 })
@@ -22,4 +25,18 @@ export class CategoryQueryDto {
   @IsOptional()
   @IsString()
   search?: string;
+
+  @ApiPropertyOptional({
+    enum: CATEGORY_SORT_FIELDS,
+    default: 'createdAt',
+    example: 'name',
+  })
+  @IsOptional()
+  @IsIn(CATEGORY_SORT_FIELDS)
+  sortBy?: (typeof CATEGORY_SORT_FIELDS)[number] = 'createdAt';
+
+  @ApiPropertyOptional({ enum: SORT_ORDERS, default: 'desc', example: 'desc' })
+  @IsOptional()
+  @IsIn(SORT_ORDERS)
+  sortOrder?: (typeof SORT_ORDERS)[number] = 'desc';
 }
