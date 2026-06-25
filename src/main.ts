@@ -22,8 +22,12 @@ async function bootstrap() {
     }),
   );
 
+  const configService = app.get(ConfigService);
+  const frontendUrl =
+    configService.get<string>('FRONTEND_URL') || 'http://localhost:3001';
+
   app.enableCors({
-    origin: ['http://localhost:3001'],
+    origin: [frontendUrl, 'http://localhost:3001'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
@@ -40,8 +44,6 @@ async function bootstrap() {
 
   const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('api/docs', app, swaggerDocument);
-
-  const configService = app.get(ConfigService);
 
   const port = configService.get<number>('PORT') || 3000;
 
