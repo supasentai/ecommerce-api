@@ -445,6 +445,104 @@ Allowed headers:
 Content-Type, Authorization
 ```
 
+## Production Deployment
+
+The backend is deployed on Render and is consumed by the Vercel-hosted frontend.
+
+### Production URLs
+
+| Service      | URL                                                        |
+| ------------ | ---------------------------------------------------------- |
+| Backend API  | `https://ecommerce-backend-api-ikyj.onrender.com`          |
+| Frontend App | `https://ecommerce-frontend-nextjs-peach.vercel.app`       |
+| Swagger UI   | `https://ecommerce-backend-api-ikyj.onrender.com/api/docs` |
+
+### Render Configuration
+
+Recommended Render service settings:
+
+```text
+Runtime: Node
+Branch: main
+Build Command: npm install --include=dev && npx --no-install prisma generate && npm run build
+Start Command: npx --no-install prisma migrate deploy && npm run start:prod
+```
+
+The project pins Node through `package.json`:
+
+```json
+"engines": {
+  "node": "22.x",
+  "npm": ">=10"
+}
+```
+
+### Render Environment Variables
+
+Required environment variables on Render:
+
+```env
+DATABASE_URL=<production_postgresql_connection_string>
+JWT_SECRET=<production_jwt_secret>
+JWT_EXPIRES_IN=7d
+FRONTEND_URL=https://ecommerce-frontend-nextjs-peach.vercel.app
+PORT=3000
+```
+
+`FRONTEND_URL` is used by CORS so the Vercel frontend can call the Render backend.
+
+### Production Database
+
+The production database is PostgreSQL.
+
+To apply pending migrations during deployment, the Render start command runs:
+
+```bash
+npx --no-install prisma migrate deploy
+```
+
+To seed demo data manually, use the Render shell or a one-off command:
+
+```bash
+npm run seed
+```
+
+Seeded demo accounts:
+
+| Role  | Email               | Password       |
+| ----- | ------------------- | -------------- |
+| Admin | `admin@example.com` | `Password123!` |
+| User  | `user1@example.com` | `Password123!` |
+| User  | `user2@example.com` | `Password123!` |
+
+### Common Deployment Notes
+
+* Do not commit `node_modules`.
+* Commit both `package.json` and `package-lock.json` after changing dependencies.
+* `@prisma/client` must be available as a runtime dependency.
+* `prisma` is required during build/migration commands.
+* If Render appears to use an old dependency tree, run **Manual Deploy → Clear build cache & deploy**.
+* If CORS fails in production, verify that `FRONTEND_URL` exactly matches the Vercel production URL and does not include a trailing slash.
+
+### Production Verification
+
+After deployment, verify these endpoints:
+
+```text
+GET https://ecommerce-backend-api-ikyj.onrender.com/products
+POST https://ecommerce-backend-api-ikyj.onrender.com/auth/login
+GET https://ecommerce-backend-api-ikyj.onrender.com/api/docs
+```
+
+Example login request:
+
+```bash
+curl -X POST https://ecommerce-backend-api-ikyj.onrender.com/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"user1@example.com","password":"Password123!"}'
+```
+
+
 ## Future Improvements
 
 - Add product image upload/storage integration.
