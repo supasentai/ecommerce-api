@@ -3,10 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Role } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
-<<<<<<< HEAD
 import { createHash } from 'crypto';
-=======
->>>>>>> fa563a20eb27a0e23718973766fc4daf0873f170
 
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuthService } from './auth.service';
@@ -68,21 +65,12 @@ describe('AuthService', () => {
   });
 
   it('should return access and refresh tokens on login and store refresh token hash', async () => {
-<<<<<<< HEAD
     mockPrismaService.user.findUnique.mockResolvedValue({
       ...mockUser,
       password: await bcrypt.hash('Password123!', 10),
     });
     mockPrismaService.user.update.mockResolvedValue({
       ...mockUser,
-=======
-    jest.spyOn(bcrypt, 'compare').mockResolvedValue(true as never);
-    jest.spyOn(bcrypt, 'hash').mockResolvedValue('new-refresh-hash' as never);
-    mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
-    mockPrismaService.user.update.mockResolvedValue({
-      ...mockUser,
-      refreshTokenHash: 'new-refresh-hash',
->>>>>>> fa563a20eb27a0e23718973766fc4daf0873f170
     });
     mockJwtService.signAsync
       .mockResolvedValueOnce('access-token')
@@ -107,7 +95,6 @@ describe('AuthService', () => {
     });
 
     expect(mockJwtService.signAsync).toHaveBeenCalledTimes(2);
-<<<<<<< HEAD
     const storedRefreshTokenHash =
       mockPrismaService.user.update.mock.calls[0][0].data.refreshTokenHash;
     await expect(
@@ -116,34 +103,19 @@ describe('AuthService', () => {
     expect(mockPrismaService.user.update).toHaveBeenCalledWith({
       where: { id: 'user-id' },
       data: { refreshTokenHash: expect.any(String) },
-=======
-    expect(bcrypt.hash).toHaveBeenCalledWith('refresh-token', 10);
-    expect(mockPrismaService.user.update).toHaveBeenCalledWith({
-      where: { id: 'user-id' },
-      data: { refreshTokenHash: 'new-refresh-hash' },
->>>>>>> fa563a20eb27a0e23718973766fc4daf0873f170
     });
   });
 
   it('should rotate refresh token when refresh token is valid', async () => {
-<<<<<<< HEAD
-=======
-    jest.spyOn(bcrypt, 'compare').mockResolvedValue(true as never);
-    jest.spyOn(bcrypt, 'hash').mockResolvedValue('rotated-hash' as never);
->>>>>>> fa563a20eb27a0e23718973766fc4daf0873f170
     mockJwtService.verifyAsync.mockResolvedValue({
       sub: 'user-id',
       email: 'user@example.com',
       role: Role.USER,
-<<<<<<< HEAD
       tokenType: 'refresh',
-=======
->>>>>>> fa563a20eb27a0e23718973766fc4daf0873f170
     });
     mockJwtService.signAsync
       .mockResolvedValueOnce('new-access-token')
       .mockResolvedValueOnce('new-refresh-token');
-<<<<<<< HEAD
     mockPrismaService.user.findUnique.mockResolvedValue({
       ...mockUser,
       refreshTokenHash: await bcrypt.hash(
@@ -153,12 +125,6 @@ describe('AuthService', () => {
     });
     mockPrismaService.user.update.mockResolvedValue({
       ...mockUser,
-=======
-    mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
-    mockPrismaService.user.update.mockResolvedValue({
-      ...mockUser,
-      refreshTokenHash: 'rotated-hash',
->>>>>>> fa563a20eb27a0e23718973766fc4daf0873f170
     });
 
     await expect(
@@ -176,7 +142,6 @@ describe('AuthService', () => {
       },
     });
 
-<<<<<<< HEAD
     const rotatedRefreshTokenHash =
       mockPrismaService.user.update.mock.calls[0][0].data.refreshTokenHash;
     await expect(
@@ -188,28 +153,14 @@ describe('AuthService', () => {
     expect(mockPrismaService.user.update).toHaveBeenCalledWith({
       where: { id: 'user-id' },
       data: { refreshTokenHash: expect.any(String) },
-=======
-    expect(bcrypt.compare).toHaveBeenCalledWith(
-      'old-refresh-token',
-      'hashed-refresh-token',
-    );
-    expect(mockPrismaService.user.update).toHaveBeenCalledWith({
-      where: { id: 'user-id' },
-      data: { refreshTokenHash: 'rotated-hash' },
->>>>>>> fa563a20eb27a0e23718973766fc4daf0873f170
     });
   });
 
   it('should reject refresh when token hash does not match', async () => {
-<<<<<<< HEAD
-=======
-    jest.spyOn(bcrypt, 'compare').mockResolvedValue(false as never);
->>>>>>> fa563a20eb27a0e23718973766fc4daf0873f170
     mockJwtService.verifyAsync.mockResolvedValue({
       sub: 'user-id',
       email: 'user@example.com',
       role: Role.USER,
-<<<<<<< HEAD
       tokenType: 'refresh',
     });
     mockPrismaService.user.findUnique.mockResolvedValue({
@@ -219,10 +170,6 @@ describe('AuthService', () => {
         10,
       ),
     });
-=======
-    });
-    mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
->>>>>>> fa563a20eb27a0e23718973766fc4daf0873f170
 
     await expect(
       service.refresh({ refreshToken: 'invalid-refresh-token' }),
@@ -232,15 +179,10 @@ describe('AuthService', () => {
   });
 
   it('should revoke refresh token on logout', async () => {
-<<<<<<< HEAD
-=======
-    jest.spyOn(bcrypt, 'compare').mockResolvedValue(true as never);
->>>>>>> fa563a20eb27a0e23718973766fc4daf0873f170
     mockJwtService.verifyAsync.mockResolvedValue({
       sub: 'user-id',
       email: 'user@example.com',
       role: Role.USER,
-<<<<<<< HEAD
       tokenType: 'refresh',
     });
     mockPrismaService.user.findUnique.mockResolvedValue({
@@ -250,10 +192,6 @@ describe('AuthService', () => {
         10,
       ),
     });
-=======
-    });
-    mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
->>>>>>> fa563a20eb27a0e23718973766fc4daf0873f170
     mockPrismaService.user.update.mockResolvedValue({
       ...mockUser,
       refreshTokenHash: null,

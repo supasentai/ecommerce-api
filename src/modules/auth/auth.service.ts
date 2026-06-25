@@ -20,14 +20,11 @@ interface AuthTokenPayload {
   email: string;
   role: string;
 }
-<<<<<<< HEAD
 
 interface RefreshTokenPayload extends AuthTokenPayload {
   tokenType?: 'refresh';
   jti?: string;
 }
-=======
->>>>>>> fa563a20eb27a0e23718973766fc4daf0873f170
 
 @Injectable()
 export class AuthService {
@@ -110,30 +107,20 @@ export class AuthService {
   }
 
   async refresh(dto: RefreshTokenDto) {
-<<<<<<< HEAD
     let payload: RefreshTokenPayload;
 
     try {
       payload = await this.jwtService.verifyAsync<RefreshTokenPayload>(
-=======
-    let payload: AuthTokenPayload;
-
-    try {
-      payload = await this.jwtService.verifyAsync<AuthTokenPayload>(
->>>>>>> fa563a20eb27a0e23718973766fc4daf0873f170
         dto.refreshToken,
       );
     } catch {
       throw new UnauthorizedException('Invalid refresh token');
     }
 
-<<<<<<< HEAD
     if (payload.tokenType !== 'refresh') {
       throw new UnauthorizedException('Invalid refresh token');
     }
 
-=======
->>>>>>> fa563a20eb27a0e23718973766fc4daf0873f170
     const user = await this.prisma.user.findUnique({
       where: {
         id: payload.sub,
@@ -144,11 +131,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid refresh token');
     }
 
-<<<<<<< HEAD
     const isRefreshTokenValid = await this.isRefreshTokenMatching(
-=======
-    const isRefreshTokenValid = await bcrypt.compare(
->>>>>>> fa563a20eb27a0e23718973766fc4daf0873f170
       dto.refreshToken,
       user.refreshTokenHash,
     );
@@ -179,30 +162,20 @@ export class AuthService {
   }
 
   async logout(dto: RefreshTokenDto) {
-<<<<<<< HEAD
     let payload: RefreshTokenPayload;
 
     try {
       payload = await this.jwtService.verifyAsync<RefreshTokenPayload>(
-=======
-    let payload: AuthTokenPayload;
-
-    try {
-      payload = await this.jwtService.verifyAsync<AuthTokenPayload>(
->>>>>>> fa563a20eb27a0e23718973766fc4daf0873f170
         dto.refreshToken,
       );
     } catch {
       throw new UnauthorizedException('Invalid refresh token');
     }
 
-<<<<<<< HEAD
     if (payload.tokenType !== 'refresh') {
       throw new UnauthorizedException('Invalid refresh token');
     }
 
-=======
->>>>>>> fa563a20eb27a0e23718973766fc4daf0873f170
     const user = await this.prisma.user.findUnique({
       where: {
         id: payload.sub,
@@ -213,11 +186,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid refresh token');
     }
 
-<<<<<<< HEAD
     const isRefreshTokenValid = await this.isRefreshTokenMatching(
-=======
-    const isRefreshTokenValid = await bcrypt.compare(
->>>>>>> fa563a20eb27a0e23718973766fc4daf0873f170
       dto.refreshToken,
       user.refreshTokenHash,
     );
@@ -291,7 +260,6 @@ export class AuthService {
   private async generateTokens(payload: AuthTokenPayload) {
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(payload),
-<<<<<<< HEAD
       this.jwtService.signAsync(
         {
           ...payload,
@@ -302,11 +270,6 @@ export class AuthService {
           expiresIn: '30d',
         },
       ),
-=======
-      this.jwtService.signAsync(payload, {
-        expiresIn: '30d',
-      }),
->>>>>>> fa563a20eb27a0e23718973766fc4daf0873f170
     ]);
 
     return {
@@ -316,14 +279,10 @@ export class AuthService {
   }
 
   private async updateRefreshTokenHash(userId: string, refreshToken: string) {
-<<<<<<< HEAD
     const refreshTokenHash = await bcrypt.hash(
       this.digestRefreshToken(refreshToken),
       10,
     );
-=======
-    const refreshTokenHash = await bcrypt.hash(refreshToken, 10);
->>>>>>> fa563a20eb27a0e23718973766fc4daf0873f170
 
     await this.prisma.user.update({
       where: {
@@ -334,7 +293,6 @@ export class AuthService {
       },
     });
   }
-<<<<<<< HEAD
 
   private async isRefreshTokenMatching(refreshToken: string, hash: string) {
     return bcrypt.compare(this.digestRefreshToken(refreshToken), hash);
@@ -343,6 +301,4 @@ export class AuthService {
   private digestRefreshToken(refreshToken: string) {
     return createHash('sha256').update(refreshToken).digest('hex');
   }
-=======
->>>>>>> fa563a20eb27a0e23718973766fc4daf0873f170
 }
