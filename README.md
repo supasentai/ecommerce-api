@@ -26,7 +26,8 @@ error handling, automated tests, and developer-friendly documentation.
 - Category CRUD
 - Product CRUD
 - Public product and category listing
-- Product search, filtering, and pagination
+- Standardized list pagination metadata
+- Product search, filtering, sorting, and pagination
 - Current-user cart management
 - Cart item create, update, remove, and clear operations
 - Checkout from cart
@@ -34,6 +35,7 @@ error handling, automated tests, and developer-friendly documentation.
 - Atomic stock decrement during checkout
 - User order history and order detail
 - Admin order listing, detail, and status updates
+- Order filtering and sorting for user/admin lists
 - User cancellation for pending orders
 - Atomic stock restoration when an order is cancelled
 - Standard success response interceptor

@@ -3,12 +3,17 @@ import { Transform } from 'class-transformer';
 import {
   IsBoolean,
   IsInt,
+  IsIn,
+  IsNumber,
   IsOptional,
   IsString,
   IsUUID,
   Max,
   Min,
 } from 'class-validator';
+
+const PRODUCT_SORT_FIELDS = ['createdAt', 'price', 'name'] as const;
+const SORT_ORDERS = ['asc', 'desc'] as const;
 
 export class ProductQueryDto {
   @ApiPropertyOptional({ example: 1, minimum: 1, default: 1 })
@@ -45,4 +50,32 @@ export class ProductQueryDto {
   })
   @IsBoolean()
   isActive?: boolean;
+
+  @ApiPropertyOptional({ example: 10, minimum: 0 })
+  @IsOptional()
+  @Transform(({ value }) => Number(value))
+  @IsNumber()
+  @Min(0)
+  minPrice?: number;
+
+  @ApiPropertyOptional({ example: 500, minimum: 0 })
+  @IsOptional()
+  @Transform(({ value }) => Number(value))
+  @IsNumber()
+  @Min(0)
+  maxPrice?: number;
+
+  @ApiPropertyOptional({
+    enum: PRODUCT_SORT_FIELDS,
+    default: 'createdAt',
+    example: 'price',
+  })
+  @IsOptional()
+  @IsIn(PRODUCT_SORT_FIELDS)
+  sortBy?: (typeof PRODUCT_SORT_FIELDS)[number] = 'createdAt';
+
+  @ApiPropertyOptional({ enum: SORT_ORDERS, default: 'desc', example: 'desc' })
+  @IsOptional()
+  @IsIn(SORT_ORDERS)
+  sortOrder?: (typeof SORT_ORDERS)[number] = 'desc';
 }

@@ -58,17 +58,59 @@ describe('UsersService', () => {
     });
 
     expect(result).toEqual({
-      items: [mockUser],
+      data: [mockUser],
       meta: {
         page: 1,
         limit: 10,
-        totalItems: 1,
+        total: 1,
         totalPages: 1,
+        hasNextPage: false,
+        hasPreviousPage: false,
       },
     });
 
     expect(mockPrismaService.user.findMany).toHaveBeenCalled();
     expect(mockPrismaService.user.count).toHaveBeenCalled();
+  });
+
+  it('should apply user filters and sorting', async () => {
+    mockPrismaService.user.findMany.mockResolvedValue([mockUser]);
+    mockPrismaService.user.count.mockResolvedValue(1);
+
+    await service.findAll({
+      page: 2,
+      limit: 5,
+      search: 'user',
+      role: Role.USER,
+      sortBy: 'email',
+      sortOrder: 'asc',
+    });
+
+    expect(mockPrismaService.user.findMany).toHaveBeenCalledWith({
+      where: {
+        OR: [
+          {
+            email: {
+              contains: 'user',
+              mode: 'insensitive',
+            },
+          },
+          {
+            name: {
+              contains: 'user',
+              mode: 'insensitive',
+            },
+          },
+        ],
+        role: Role.USER,
+      },
+      skip: 5,
+      take: 5,
+      orderBy: {
+        email: 'asc',
+      },
+      select: expect.any(Object),
+    });
   });
 
   it('should return one user by id', async () => {

@@ -446,29 +446,111 @@ describe('OrdersService', () => {
     mockPrismaService.order.findMany.mockResolvedValue(orders);
     mockPrismaService.order.count.mockResolvedValue(1);
 
-    await expect(service.findMyOrders('user-id', {})).resolves.toEqual({
+    await expect(
+      service.findMyOrders('user-id', {
+        status: OrderStatus.PENDING,
+        fromDate: '2026-01-01T00:00:00.000Z',
+        toDate: '2026-01-31T23:59:59.999Z',
+        sortBy: 'totalAmount',
+        sortOrder: 'asc',
+      }),
+    ).resolves.toEqual({
       data: orders,
       meta: {
         page: 1,
         limit: 10,
         total: 1,
         totalPages: 1,
+        hasNextPage: false,
+        hasPreviousPage: false,
       },
     });
 
+    const expectedWhere = {
+      userId: 'user-id',
+      status: OrderStatus.PENDING,
+      createdAt: {
+        gte: new Date('2026-01-01T00:00:00.000Z'),
+        lte: new Date('2026-01-31T23:59:59.999Z'),
+      },
+    };
+
     expect(mockPrismaService.order.findMany).toHaveBeenCalledWith({
-      where: { userId: 'user-id' },
+      where: expectedWhere,
       skip: 0,
       take: 10,
       orderBy: {
-        createdAt: 'desc',
+        totalAmount: 'asc',
       },
       include: {
         items: true,
       },
     });
     expect(mockPrismaService.order.count).toHaveBeenCalledWith({
-      where: { userId: 'user-id' },
+      where: expectedWhere,
+    });
+  });
+
+  it('should return filtered admin orders', async () => {
+    const orders = [
+      {
+        id: 'order-id',
+        userId: 'user-id',
+        status: OrderStatus.PAID,
+        items: [],
+      },
+    ];
+
+    mockPrismaService.order.findMany.mockResolvedValue(orders);
+    mockPrismaService.order.count.mockResolvedValue(12);
+
+    await expect(
+      service.findAllOrders({
+        page: 2,
+        limit: 5,
+        userId: '11111111-1111-4111-8111-111111111111',
+        status: OrderStatus.PAID,
+        sortBy: 'status',
+        sortOrder: 'asc',
+      }),
+    ).resolves.toEqual({
+      data: orders,
+      meta: {
+        page: 2,
+        limit: 5,
+        total: 12,
+        totalPages: 3,
+        hasNextPage: true,
+        hasPreviousPage: true,
+      },
+    });
+
+    const expectedWhere = {
+      userId: '11111111-1111-4111-8111-111111111111',
+      status: OrderStatus.PAID,
+    };
+
+    expect(mockPrismaService.order.findMany).toHaveBeenCalledWith({
+      where: expectedWhere,
+      skip: 5,
+      take: 5,
+      orderBy: {
+        status: 'asc',
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            role: true,
+          },
+        },
+        items: true,
+      },
+    });
+    expect(mockPrismaService.order.count).toHaveBeenCalledWith({
+      where: expectedWhere,
     });
   });
 

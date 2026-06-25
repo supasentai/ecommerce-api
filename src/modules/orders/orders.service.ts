@@ -3,9 +3,10 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { OrderStatus } from '@prisma/client';
+import { OrderStatus, Prisma } from '@prisma/client';
 
 import { PrismaService } from '../../prisma/prisma.service';
+import { createPaginatedResponse } from '../../common/pagination/pagination';
 import { FindOrdersQueryDto } from './dto/find-orders-query.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 
@@ -96,33 +97,28 @@ export class OrdersService {
     const page = query.page ?? 1;
     const limit = query.limit ?? 10;
     const skip = (page - 1) * limit;
+    const sortBy = query.sortBy ?? 'createdAt';
+    const sortOrder = query.sortOrder ?? 'desc';
+    const where = this.buildOrderWhere(query, { userId });
 
     const [orders, total] = await this.prisma.$transaction([
       this.prisma.order.findMany({
-        where: { userId },
+        where,
         skip,
         take: limit,
         orderBy: {
-          createdAt: 'desc',
+          [sortBy]: sortOrder,
         },
         include: {
           items: true,
         },
       }),
       this.prisma.order.count({
-        where: { userId },
+        where,
       }),
     ]);
 
-    return {
-      data: orders,
-      meta: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
-    };
+    return createPaginatedResponse(orders, total, page, limit);
   }
 
   async findMyOrder(userId: string, orderId: string) {
@@ -220,13 +216,20 @@ export class OrdersService {
     const page = query.page ?? 1;
     const limit = query.limit ?? 10;
     const skip = (page - 1) * limit;
+    const sortBy = query.sortBy ?? 'createdAt';
+    const sortOrder = query.sortOrder ?? 'desc';
+    const where = this.buildOrderWhere(
+      query,
+      query.userId ? { userId: query.userId } : {},
+    );
 
     const [orders, total] = await this.prisma.$transaction([
       this.prisma.order.findMany({
+        where,
         skip,
         take: limit,
         orderBy: {
-          createdAt: 'desc',
+          [sortBy]: sortOrder,
         },
         include: {
           user: {
@@ -240,18 +243,12 @@ export class OrdersService {
           items: true,
         },
       }),
-      this.prisma.order.count(),
+      this.prisma.order.count({
+        where,
+      }),
     ]);
 
-    return {
-      data: orders,
-      meta: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
-    };
+    return createPaginatedResponse(orders, total, page, limit);
   }
 
   async findOrderByAdmin(orderId: string) {
@@ -341,5 +338,23 @@ export class OrdersService {
         `Cannot change order status from ${currentStatus} to ${nextStatus}`,
       );
     }
+  }
+
+  private buildOrderWhere(
+    query: FindOrdersQueryDto,
+    baseWhere: Prisma.OrderWhereInput = {},
+  ): Prisma.OrderWhereInput {
+    return {
+      ...baseWhere,
+      ...(query.status ? { status: query.status } : {}),
+      ...(query.fromDate || query.toDate
+        ? {
+            createdAt: {
+              ...(query.fromDate ? { gte: new Date(query.fromDate) } : {}),
+              ...(query.toDate ? { lte: new Date(query.toDate) } : {}),
+            },
+          }
+        : {}),
+    };
   }
 }
