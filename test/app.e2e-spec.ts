@@ -298,40 +298,48 @@ function createInMemoryPrisma() {
   return prisma;
 }
 
+async function createTestApplication() {
+  process.env.DATABASE_URL =
+    'postgresql://postgres:postgres@localhost:5432/ecommerce_db?schema=public';
+  process.env.JWT_SECRET = 'test-secret';
+  process.env.JWT_EXPIRES_IN = '7d';
+
+  const prisma = createInMemoryPrisma();
+  // Load AppModule after setting env vars because ConfigModule validates on import.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { AppModule } = require('../src/app.module');
+
+  const moduleFixture: TestingModule = await Test.createTestingModule({
+    imports: [AppModule],
+  })
+    .overrideProvider(PrismaService)
+    .useValue(prisma)
+    .compile();
+
+  const app = moduleFixture.createNestApplication();
+  app.useGlobalFilters(new HttpExceptionFilter());
+  app.useGlobalInterceptors(new ResponseTransformInterceptor());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
+
+  await app.init();
+
+  return { app, prisma };
+}
+
 describe('Order checkout flow (e2e)', () => {
   let app: INestApplication<App>;
   let prisma: ReturnType<typeof createInMemoryPrisma>;
 
   beforeAll(async () => {
-    process.env.DATABASE_URL =
-      'postgresql://postgres:postgres@localhost:5432/ecommerce_db?schema=public';
-    process.env.JWT_SECRET = 'test-secret';
-    process.env.JWT_EXPIRES_IN = '7d';
-
-    prisma = createInMemoryPrisma();
-    // Load AppModule after setting env vars because ConfigModule validates on import.
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { AppModule } = require('../src/app.module');
-
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    })
-      .overrideProvider(PrismaService)
-      .useValue(prisma)
-      .compile();
-
-    app = moduleFixture.createNestApplication();
-    app.useGlobalFilters(new HttpExceptionFilter());
-    app.useGlobalInterceptors(new ResponseTransformInterceptor());
-    app.useGlobalPipes(
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-      }),
-    );
-
-    await app.init();
+    const testApplication = await createTestApplication();
+    app = testApplication.app;
+    prisma = testApplication.prisma;
   });
 
   afterAll(async () => {
@@ -489,5 +497,43 @@ describe('Order checkout flow (e2e)', () => {
       });
 
     expect(prisma.state.products[0].stock).toBe(10);
+  });
+});
+
+describe('Auth rate limiting (e2e)', () => {
+  let app: INestApplication<App>;
+
+  beforeAll(async () => {
+    const testApplication = await createTestApplication();
+    app = testApplication.app;
+  });
+
+  afterAll(async () => {
+    await app?.close();
+  });
+
+  it('returns 429 after more than 5 login attempts in 60 seconds', async () => {
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({
+          email: 'limited@example.com',
+          password: 'wrong-password',
+        })
+        .expect(401);
+    }
+
+    await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({
+        email: 'limited@example.com',
+        password: 'wrong-password',
+      })
+      .expect(429)
+      .expect(({ body }) => {
+        expect(body.statusCode).toBe(429);
+        expect(body.message).toBe('Too many requests');
+        expect(body.path).toBe('/auth/login');
+      });
   });
 });
